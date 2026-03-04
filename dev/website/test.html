@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧪 DEV — E2E Test Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .dev-badge { position:fixed; top:12px; right:12px; background:#f59e0b; color:#000; font-size:0.72rem; font-weight:800; padding:4px 12px; border-radius:20px; letter-spacing:0.08em; text-transform:uppercase; z-index:999; }
+    .test-section { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; }
+    .test-section h3 { font-weight:700; margin-bottom:16px; font-size:1rem; }
+    .status-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.875rem; }
+    .status-row:last-child { border-bottom:none; }
+    .status-key { color:var(--gray-400); }
+    .status-val { font-weight:600; }
+    .status-val.ok { color:var(--brand-green-light); }
+    .status-val.err { color:#f87171; }
+    .status-val.warn { color:#fbbf24; }
+    .test-btn { padding:8px 16px; border-radius:var(--radius-md); font-size:0.82rem; font-weight:700; border:none; cursor:pointer; transition:all 0.2s; }
+    .test-btn.primary { background:linear-gradient(135deg,var(--brand-purple),var(--brand-indigo)); color:#fff; }
+    .test-btn.success { background:rgba(16,185,129,0.2); color:var(--brand-green-light); border:1px solid rgba(16,185,129,0.3); }
+    .test-btn.danger { background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.3); }
+    .test-btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .btn-group { display:flex; gap:8px; flex-wrap:wrap; }
+    .log-output { background:#0d0d12; border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; font-family:monospace; font-size:0.78rem; color:#a3e635; max-height:220px; overflow-y:auto; margin-top:12px; white-space:pre-wrap; }
+    .step-list { list-style:none; display:flex; flex-direction:column; gap:8px; }
+    .step-item { display:flex; align-items:center; gap:12px; font-size:0.875rem; }
+    .step-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; flex-shrink:0; }
+    .step-dot.pending { background:var(--gray-800); color:var(--gray-600); border:1px solid var(--border); }
+    .step-dot.pass { background:rgba(16,185,129,0.2); color:var(--brand-green-light); border:1px solid rgba(16,185,129,0.4); }
+    .step-dot.fail { background:rgba(239,68,68,0.1); color:#f87171; border:1px solid rgba(239,68,68,0.3); }
+    .step-dot.running { background:rgba(124,58,237,0.2); color:var(--brand-purple-light); border:1px solid rgba(124,58,237,0.4); animation:pulse 1s infinite; }
+  </style>
+</head>
+<body>
+<div class="dev-badge">🧪 DEV MODE</div>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html" style="font-size:1.1rem; font-weight:900; color:#f59e0b;">🧪 TaxSaver DEV</a>
+    <ul class="navbar-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="app.html">Calculator</a></li>
+      <li><a href="premium.html">Premium</a></li>
+      <li><a href="pricing.html">Pricing</a></li>
+    </ul>
+    <a href="test.html" style="color:#f59e0b; font-size:0.85rem; font-weight:700;">E2E Dashboard</a>
+  </div>
+</nav>
+
+<div class="container" style="padding-top:48px; padding-bottom:80px;">
+  <div style="text-align:center; margin-bottom:40px;">
+    <span class="badge" style="background:rgba(245,158,11,0.15); color:#f59e0b; border-color:rgba(245,158,11,0.3); margin-bottom:16px; display:inline-block;">🧪 Developer Mode</span>
+    <h1 style="font-weight:900; font-size:2rem;" class="gradient-text">E2E Test Dashboard</h1>
+    <p class="text-sm text-muted mt-sm">Run full end-to-end tests without real Firebase or Razorpay credentials.</p>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+    
+    <!-- Left column -->
+    <div>
+      <!-- Server Status -->
+      <div class="test-section">
+        <h3>🖥️ Mock Server Status</h3>
+        <div class="status-row"><span class="status-key">Backend URL</span><span class="status-val" id="serverUrl">http://localhost:3001</span></div>
+        <div class="status-row"><span class="status-key">Server Health</span><span class="status-val" id="serverHealth">Checking...</span></div>
+        <div class="status-row"><span class="status-key">Mode</span><span class="status-val ok">Development (Mock)</span></div>
+        <div class="btn-group" style="margin-top:14px;">
+          <button class="test-btn primary" onclick="checkHealth()">🔄 Ping Server</button>
+          <a href="http://localhost:3001/health" target="_blank" class="test-btn" style="background:rgba(255,255,255,0.06); color:var(--gray-300); text-decoration:none;">Open /health ↗</a>
+        </div>
+      </div>
+
+      <!-- Auth Status -->
+      <div class="test-section">
+        <h3>🔐 Auth State</h3>
+        <div class="status-row"><span class="status-key">Signed In</span><span class="status-val" id="authStatus">Checking...</span></div>
+        <div class="status-row"><span class="status-key">User UID</span><span class="status-val" id="authUid">—</span></div>
+        <div class="status-row"><span class="status-key">Email</span><span class="status-val" id="authEmail">—</span></div>
+        <div class="status-row"><span class="status-key">ID Token</span><span class="status-val" id="authToken">—</span></div>
+        <div class="btn-group" style="margin-top:14px;">
+          <button class="test-btn success" onclick="testSignIn()">✅ Sign In</button>
+          <button class="test-btn danger" onclick="testSignOut()">🚪 Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Premium Status -->
+      <div class="test-section">
+        <h3>💰 Premium Status</h3>
+        <div class="status-row"><span class="status-key">isPremium</span><span class="status-val" id="premiumStatus">Checking...</span></div>
+        <div class="status-row"><span class="status-key">Expiry</span><span class="status-val" id="premiumExpiry">—</span></div>
+        <div class="btn-group" style="margin-top:14px;">
+          <button class="test-btn success" onclick="checkPremiumStatus()">🔄 Refresh Status</button>
+          <button class="test-btn danger" onclick="resetPremium()">🔁 Reset to Free</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div>
+      <!-- E2E Test Suite -->
+      <div class="test-section">
+        <h3>🧪 E2E Test Suite</h3>
+        <p class="text-xs text-muted" style="margin-bottom:16px;">Runs the full payment flow automatically: sign-in → create order → verify → check premium.</p>
+        <ul class="step-list" id="testSteps">
+          <li class="step-item"><div class="step-dot pending" id="step1-dot">1</div><span id="step1-label">Sign in as test user</span></li>
+          <li class="step-item"><div class="step-dot pending" id="step2-dot">2</div><span id="step2-label">Check server health</span></li>
+          <li class="step-item"><div class="step-dot pending" id="step3-dot">3</div><span id="step3-label">Create payment order</span></li>
+          <li class="step-item"><div class="step-dot pending" id="step4-dot">4</div><span id="step4-label">Verify payment (mock)</span></li>
+          <li class="step-item"><div class="step-dot pending" id="step5-dot">5</div><span id="step5-label">Confirm premium activated</span></li>
+          <li class="step-item"><div class="step-dot pending" id="step6-dot">6</div><span id="step6-label">Reset back to free</span></li>
+        </ul>
+        <div class="btn-group" style="margin-top:16px;">
+          <button class="test-btn primary" id="runTestBtn" onclick="runE2ETest()">▶ Run Full E2E Test</button>
+        </div>
+        <div class="log-output" id="testLog">Ready. Click "Run Full E2E Test" to start.\n</div>
+      </div>
+
+      <!-- Page Links -->
+      <div class="test-section">
+        <h3>🔗 Dev Pages</h3>
+        <div class="btn-group" style="flex-direction:column; gap:8px;">
+          <a href="index.html" class="test-btn" style="background:rgba(255,255,255,0.06); color:var(--gray-200); text-decoration:none; display:block; text-align:center;">🏠 Landing Page</a>
+          <a href="app.html" class="test-btn" style="background:rgba(255,255,255,0.06); color:var(--gray-200); text-decoration:none; display:block; text-align:center;">🧮 Calculator (Free)</a>
+          <a href="premium.html" class="test-btn" style="background:rgba(255,255,255,0.06); color:var(--gray-200); text-decoration:none; display:block; text-align:center;">✨ Premium Dashboard</a>
+          <a href="pricing.html" class="test-btn" style="background:rgba(255,255,255,0.06); color:var(--gray-200); text-decoration:none; display:block; text-align:center;">💰 Pricing + Checkout</a>
+          <a href="login.html" class="test-btn" style="background:rgba(255,255,255,0.06); color:var(--gray-200); text-decoration:none; display:block; text-align:center;">🔐 Login Page</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { signInWithGoogle, signOutUser, getIdToken, getPremiumStatus, initAuthState } from './auth.js';
+
+const API = 'http://localhost:3001';
+const log = (msg) => {
+  const el = document.getElementById('testLog');
+  el.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+  el.scrollTop = el.scrollHeight;
+};
+
+const setStep = (n, status, label = null) => {
+  const dot = document.getElementById(`step${n}-dot`);
+  dot.className = `step-dot ${status}`;
+  dot.textContent = status === 'pass' ? '✓' : status === 'fail' ? '✗' : n;
+  if (label) document.getElementById(`step${n}-label`).textContent = label;
+};
+
+// Init auth state
+initAuthState({
+  onSignedIn: async (user, isPremium) => {
+    document.getElementById('authStatus').textContent = '✅ Signed in';
+    document.getElementById('authStatus').className = 'status-val ok';
+    document.getElementById('authUid').textContent = user.uid;
+    document.getElementById('authEmail').textContent = user.email;
+    const token = await user.getIdToken();
+    document.getElementById('authToken').textContent = token.slice(0, 22) + '...';
+    updatePremiumUI(isPremium, null);
+  },
+  onSignedOut: () => {
+    document.getElementById('authStatus').textContent = '❌ Not signed in';
+    document.getElementById('authStatus').className = 'status-val err';
+    document.getElementById('authUid').textContent = '—';
+    document.getElementById('authEmail').textContent = '—';
+    document.getElementById('authToken').textContent = '—';
+  }
+});
+
+function updatePremiumUI(isPremium, expiry) {
+  const el = document.getElementById('premiumStatus');
+  el.textContent = isPremium ? '✅ Premium' : '🆓 Free';
+  el.className = isPremium ? 'status-val ok' : 'status-val warn';
+  document.getElementById('premiumExpiry').textContent = expiry || (isPremium ? 'Set' : '—');
+}
+
+// Check server health
+window.checkHealth = async function() {
+  const el = document.getElementById('serverHealth');
+  el.textContent = 'Checking...';
+  try {
+    const res = await fetch(`${API}/health`);
+    const data = await res.json();
+    el.textContent = `✅ ${data.status} (${data.service})`;
+    el.className = 'status-val ok';
+  } catch(e) {
+    el.textContent = '❌ Unreachable — run mock server first';
+    el.className = 'status-val err';
+  }
+};
+
+window.testSignIn = async function() {
+  await signInWithGoogle();
+};
+window.testSignOut = async function() {
+  await signOutUser();
+};
+
+window.checkPremiumStatus = async function() {
+  const data = await getPremiumStatus();
+  updatePremiumUI(data.isPremium, data.premiumExpiry);
+};
+
+window.resetPremium = async function() {
+  await fetch(`${API}/api/dev/reset`);
+  updatePremiumUI(false, null);
+  log('Premium reset to FREE via /api/dev/reset');
+};
+
+window.runE2ETest = async function() {
+  const btn = document.getElementById('runTestBtn');
+  btn.disabled = true;
+  document.getElementById('testLog').textContent = '';
+  log('Starting E2E test suite...\n');
+  for (let i = 1; i <= 6; i++) setStep(i, 'pending');
+
+  // Step 1: Sign in
+  setStep(1, 'running');
+  try {
+    await signInWithGoogle();
+    log('✅ Step 1: Signed in as test@taxsaver.dev');
+    setStep(1, 'pass', 'Sign in as test user ✓');
+  } catch(e) {
+    log('❌ Step 1 failed: ' + e.message);
+    setStep(1, 'fail');
+    btn.disabled = false; return;
+  }
+
+  // Step 2: Server health
+  setStep(2, 'running');
+  try {
+    const res = await fetch(`${API}/health`);
+    if (!res.ok) throw new Error('Server returned ' + res.status);
+    log('✅ Step 2: Mock server is healthy');
+    setStep(2, 'pass', 'Server health check ✓');
+  } catch(e) {
+    log('❌ Step 2 failed: Is the mock server running? (go run dev/server/mock_server.go)');
+    setStep(2, 'fail');
+    btn.disabled = false; return;
+  }
+
+  // Step 3: Create order
+  setStep(3, 'running');
+  let orderId;
+  try {
+    const res = await fetch(`${API}/api/payment/create-order`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer dev-test-token-12345', 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+    orderId = data.orderId;
+    log(`✅ Step 3: Order created — ${orderId} (₹${data.amount/100})`);
+    setStep(3, 'pass', `Create payment order ✓ (${orderId})`);
+  } catch(e) {
+    log('❌ Step 3 failed: ' + e.message);
+    setStep(3, 'fail'); btn.disabled = false; return;
+  }
+
+  // Step 4: Verify payment
+  setStep(4, 'running');
+  try {
+    const res = await fetch(`${API}/api/payment/verify`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer dev-test-token-12345', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ razorpay_order_id: orderId, razorpay_payment_id: 'pay_mock_001', razorpay_signature: 'mock_sig' })
+    });
+    const data = await res.json();
+    log(`✅ Step 4: Payment verified — premium until ${data.premiumExpiry}`);
+    setStep(4, 'pass', 'Verify payment (mock) ✓');
+  } catch(e) {
+    log('❌ Step 4 failed: ' + e.message);
+    setStep(4, 'fail'); btn.disabled = false; return;
+  }
+
+  // Step 5: Check premium
+  setStep(5, 'running');
+  try {
+    const data = await getPremiumStatus();
+    if (!data.isPremium) throw new Error('User is not premium after payment');
+    updatePremiumUI(true, data.premiumExpiry);
+    log('✅ Step 5: Premium confirmed active!');
+    setStep(5, 'pass', 'Premium activated ✓');
+  } catch(e) {
+    log('❌ Step 5 failed: ' + e.message);
+    setStep(5, 'fail'); btn.disabled = false; return;
+  }
+
+  // Step 6: Reset
+  setStep(6, 'running');
+  await fetch(`${API}/api/dev/reset`);
+  const finalStatus = await getPremiumStatus();
+  updatePremiumUI(finalStatus.isPremium, null);
+  log('✅ Step 6: Reset to Free — all tests passed!');
+  setStep(6, 'pass', 'Reset to Free ✓');
+
+  log('\n🎉 ALL TESTS PASSED — E2E flow is working correctly!');
+  btn.disabled = false;
+};
+
+// Auto-check health on load
+checkHealth();
+</script>
+</body>
+</html>

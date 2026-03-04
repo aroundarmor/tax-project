@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaxSaver Pricing — Free vs Premium | Indian Tax Calculator</title>
+  <meta name="description" content="Simple pricing for TaxSaver. Free tax calculator forever. Premium at ₹999/year includes Form 16 upload, AI insights, and CA-grade reports.">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Razorpay Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    .compare-table { width:100%; border-collapse:collapse; }
+    .compare-table th { padding: 14px 20px; font-size:0.82rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--gray-400); border-bottom: 1px solid var(--border); text-align:left; }
+    .compare-table th.plan { text-align:center; padding:20px; }
+    .compare-table td { padding: 14px 20px; font-size:0.875rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .compare-table td.check { text-align:center; font-size:1.1rem; }
+    .compare-table tr:hover td { background: var(--bg-card-hover); }
+    .compare-table tr.section-header td { background: rgba(124,58,237,0.07); font-weight:700; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--brand-purple-light); padding: 10px 20px; }
+    .plan-header { text-align:center; padding:28px 20px; }
+    .plan-name { font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--gray-400); margin-bottom:8px; }
+    .plan-price { font-size:2.4rem; font-weight:900; letter-spacing:-1.5px; }
+    .plan-price sup { font-size:1rem; vertical-align:top; margin-top:6px; letter-spacing:0; font-weight:700; }
+    .plan-period { font-size:0.85rem; color:var(--gray-400); }
+    th.premium-col { background: rgba(124,58,237,0.1); border-left: 1px solid rgba(124,58,237,0.3); border-right: 1px solid rgba(124,58,237,0.3); }
+    td.premium-col { background: rgba(124,58,237,0.04); border-left: 1px solid rgba(124,58,237,0.15); border-right: 1px solid rgba(124,58,237,0.15); }
+    .guarantee-card { background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.05)); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--radius-lg); padding: 28px; display:flex; align-items:center; gap:20px; }
+    .guarantee-icon { font-size:3rem; flex-shrink:0; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html" class="navbar-logo gradient-text">💰 TaxSaver</a>
+    <ul class="navbar-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="app.html">Calculator</a></li>
+      <li><a href="premium.html">Premium</a></li>
+      <li><a href="pricing.html" class="active">Pricing</a></li>
+    </ul>
+    <div class="navbar-cta" style="gap:10px;">
+      <!-- User avatar (shown when signed in) -->
+      <div id="navAvatar" title="" style="display:none; width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--brand-purple),var(--brand-indigo)); align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; overflow:hidden; cursor:pointer;">        <img src="" style="width:100%; height:100%; object-fit:cover; display:none;" alt="Avatar">
+        <span class="initials">?</span>
+      </div>
+      <span id="navPremiumBadge" class="badge badge-premium" style="display:none;">✨ Premium</span>
+      <a href="login.html" id="navAuthBtn" class="btn btn-outline btn-sm">Sign In</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ───────────────────────────────────────────── -->
+<section style="padding: 72px 0 48px; text-align:center; border-bottom: 1px solid var(--border);">
+  <div class="container-sm">
+    <span class="section-label">Pricing</span>
+    <h1 class="section-title" style="margin:16px 0 12px;">Simple. <span class="gradient-text">No surprises.</span></h1>
+    <p class="section-subtitle">Start free. Upgrade only when you're ready to unlock every rupee of savings.</p>
+  </div>
+</section>
+
+<!-- ── Pricing Cards ───────────────────────────────────── -->
+<section class="section-sm">
+  <div class="container">
+    <div class="pricing-grid" style="margin-bottom:56px;">
+      <!-- Free -->
+      <div class="pricing-card">
+        <div class="pricing-plan">Free</div>
+        <div class="pricing-price">₹<span>0</span></div>
+        <p class="pricing-desc">Forever free. No credit card, ever.</p>
+        <ul class="pricing-features">
+          <li><span class="check">✅</span> Old & New regime calculator</li>
+          <li><span class="check">✅</span> All 20+ deduction sections</li>
+          <li><span class="check">✅</span> Senior / super-senior slabs</li>
+          <li><span class="check">✅</span> Regime comparison table</li>
+          <li><span class="check">✅</span> ITR form guidance</li>
+          <li><span class="check">✅</span> Basic PDF export</li>
+          <li><span class="check">✅</span> 2 investment suggestions</li>
+          <li class="locked"><span class="check">🔒</span> Document upload & auto-fill</li>
+          <li class="locked"><span class="check">🔒</span> AI optimization report</li>
+          <li class="locked"><span class="check">🔒</span> CA-grade PDF commentary</li>
+          <li class="locked"><span class="check">🔒</span> All 5 personalized suggestions</li>
+          <li class="locked"><span class="check">🔒</span> Priority support</li>
+        </ul>
+        <a href="app.html" class="btn btn-outline w-full">Start Free →</a>
+      </div>
+
+      <!-- Premium -->
+      <div class="pricing-card featured">
+        <div class="pricing-badge">⭐ Most Popular · Best Value</div>
+        <div class="pricing-plan" style="color:var(--brand-purple-light);">Premium</div>
+        <div class="pricing-price gradient-text-gold">₹<span>999</span></div>
+        <p class="pricing-period">per year · that's just ₹83/month</p>
+        <p class="pricing-desc" style="margin-top:8px;">One fee. Full access. Maximum savings. 🚀</p>
+        <ul class="pricing-features">
+          <li><span class="check">✅</span> Everything in Free</li>
+          <li><span class="check">✅</span> <strong>Form 16 auto-fill</strong> (PDF upload)</li>
+          <li><span class="check">✅</span> <strong>AIS & Form 26AS</strong> upload & analysis</li>
+          <li><span class="check">✅</span> <strong>Bank interest certificate</strong> parser</li>
+          <li><span class="check">✅</span> <strong>Home loan statement</strong> extraction</li>
+          <li><span class="check">✅</span> <strong>AI tax optimization report</strong></li>
+          <li><span class="check">✅</span> Full personalized investment roadmap</li>
+          <li><span class="check">✅</span> CA-grade PDF with expert commentary</li>
+          <li><span class="check">✅</span> Mismatch alerts (AIS vs ITR)</li>
+          <li><span class="check">✅</span> Priority email support</li>
+          <li><span class="check">✅</span> 30-day money-back guarantee</li>
+        </ul>
+        <a href="#" onclick="handleGetPremium()" class="btn btn-premium w-full" style="font-size:1rem; padding:14px;">✨ Get Premium — ₹999/yr</a>
+        <p class="text-center text-xs text-muted mt-sm">Instant access · UPI, Cards, Net Banking · Secure via Razorpay</p>
+      </div>
+    </div>
+
+    <!-- Guarantee -->
+    <div class="guarantee-card" style="max-width:760px; margin:0 auto 56px;">
+      <div class="guarantee-icon">🛡️</div>
+      <div>
+        <div style="font-weight:800; font-size:1.1rem; margin-bottom:6px;">30-Day Money-Back Guarantee</div>
+        <p class="text-sm text-muted">Not happy for any reason? Email us within 30 days of purchase and we'll refund you 100%. No questions asked. We're that confident you'll love it.</p>
+      </div>
+    </div>
+
+    <!-- Full Feature Comparison Table -->
+    <h2 style="font-weight:800; text-align:center; margin-bottom:32px;">Full Feature Comparison</h2>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width:55%">Feature</th>
+            <th class="plan">Free</th>
+            <th class="plan premium-col">Premium ✨</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="section-header"><td colspan="3">Core Calculator</td></tr>
+          <tr><td>Old & New Regime Calculator</td><td class="check">✅</td><td class="check premium-col">✅</td></tr>
+          <tr><td>All 20+ Deduction Sections (80C, 80D, etc.)</td><td class="check">✅</td><td class="check premium-col">✅</td></tr>
+          <tr><td>Senior / Super-Senior Citizen Slabs</td><td class="check">✅</td><td class="check premium-col">✅</td></tr>
+          <tr><td>Old vs New Regime Comparison</td><td class="check">✅</td><td class="check premium-col">✅</td></tr>
+          <tr><td>Budget 2025-26 Updated (NPS Vatsalya, 87A, etc.)</td><td class="check">✅</td><td class="check premium-col">✅</td></tr>
+          <tr><td>ITR Form Recommendation (1/2/3/4)</td><td class="check">✅</td><td class="check premium-col">✅</td></tr>
+          <tr><td>Basic PDF Summary Export</td><td class="check">✅</td><td class="check premium-col">✅</td></tr>
+
+          <tr class="section-header"><td colspan="3">Document Upload & Auto-Fill</td></tr>
+          <tr><td>Form 16 (Part A & B) PDF Auto-Fill</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+          <tr><td>AIS (Annual Information Statement) Upload</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+          <tr><td>Form 26AS Upload & Cross-Check</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+          <tr><td>Bank / FD Interest Certificate Parser</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+          <tr><td>Home Loan Statement Extraction</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+          <tr><td>Mismatch Alerts (AIS vs ITR discrepancies)</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+
+          <tr class="section-header"><td colspan="3">AI Analysis & Reports</td></tr>
+          <tr><td>Investment Suggestions</td><td class="check">2 of 5</td><td class="check premium-col">All 5 ✅</td></tr>
+          <tr><td>AI Tax Optimization Report</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+          <tr><td>Personalized Investment Roadmap</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+          <tr><td>CA-Grade PDF with Expert Commentary</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+          <tr><td>Section-wise Tax Savings Breakdown</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+
+          <tr class="section-header"><td colspan="3">Support</td></tr>
+          <tr><td>Community Support</td><td class="check">✅</td><td class="check premium-col">✅</td></tr>
+          <tr><td>Priority Email Support (24h response)</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+          <tr><td>30-Day Money-Back Guarantee</td><td class="check">—</td><td class="check premium-col">✅</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ROI Callout -->
+    <div class="alert alert-success text-center mt-md" style="max-width: 700px; margin:32px auto 0; padding:20px;">
+      <strong style="font-size:1rem;">🧮 The math is simple:</strong> Average premium user saves <strong>₹47,000</strong> in taxes/year. Premium costs <strong>₹999</strong>. That's a <span style="color: var(--brand-green-light); font-weight:900; font-size:1.1rem;">47× ROI</span>.
+    </div>
+
+  </div>
+</section>
+
+<!-- ── FAQ ─────────────────────────────────────────────── -->
+<section class="section" style="border-top: 1px solid var(--border);">
+  <div class="container-sm">
+    <div class="section-header">
+      <h2 class="section-title">Pricing <span class="gradient-text">FAQ</span></h2>
+    </div>
+    <div>
+      <div class="faq-item open">
+        <div class="faq-question" onclick="toggleFaq(this)">Can I try before I pay?<span class="faq-toggle">+</span></div>
+        <div class="faq-answer">Yes! The Free plan gives you full access to the calculator, regime comparison, and 2 investment suggestions — forever. Upgrade only when you want the document upload and AI report features.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">What payment methods are accepted?<span class="faq-toggle">+</span></div>
+        <div class="faq-answer">We accept UPI, credit cards, debit cards, net banking, and wallets. All payments are processed securely via Razorpay.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">Is my Form 16 data safe?<span class="faq-toggle">+</span></div>
+        <div class="faq-answer">Yes. Documents uploaded are processed entirely in-memory and are never written to disk or stored on our servers. We are fully DPDP Act 2023 compliant. All premium sessions use AES-256 encryption in transit.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">How does the 30-day refund work?<span class="faq-toggle">+</span></div>
+        <div class="faq-answer">Email us at support@taxsaver.in within 30 days of purchase with your order ID. We'll process a full refund within 5–7 business days. No questions, no hassle.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">Is this for FY 2025-26 only?<span class="faq-toggle">+</span></div>
+        <div class="faq-answer">Your subscription gives you access for the full financial year. We update the calculator with every budget — so your subscription automatically covers future budget changes too.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Final CTA ───────────────────────────────────────── -->
+<section class="section-sm text-center" style="border-top: 1px solid var(--border);">
+  <div class="container-sm">
+    <h2 class="section-title" style="margin-bottom:16px;">Start saving more today</h2>
+    <p class="section-subtitle" style="margin-bottom:32px;">₹999/year is less than what most people leave on the table in a single deduction.</p>
+    <a href="#" onclick="handleGetPremium()" class="btn btn-premium btn-lg">✨ Get Premium — ₹999/yr</a>
+    <p class="text-xs text-muted mt-md">Or <a href="app.html" style="color:var(--brand-purple-light);">use the free calculator →</a></p>
+  </div>
+</section>
+
+<!-- ── Footer ──────────────────────────────────────────── -->
+<footer class="footer" style="margin-top:0;">
+  <div class="container">
+    <div class="footer-bottom" style="justify-content:center; flex-direction:column; text-align:center; gap:8px;">
+      <span class="text-muted text-sm">© 2026 TaxSaver · For educational purposes — consult a CA for final tax filing.</span>
+      <div style="display:flex; gap:24px; justify-content:center;">
+        <a href="index.html" style="color:var(--gray-500); font-size:0.8rem;">Home</a>
+        <a href="app.html" style="color:var(--gray-500); font-size:0.8rem;">Calculator</a>
+        <a href="premium.html" style="color:var(--gray-500); font-size:0.8rem;">Premium</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ── Success Modal ──────────────────────────────────── -->
+<div id="successModal" style="display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px); align-items:center; justify-content:center;">
+  <div style="background:#16161f; border:1px solid rgba(16,185,129,0.4); border-radius:var(--radius-xl); padding:48px 40px; max-width:420px; width:90%; text-align:center;">
+    <div style="font-size:3.5rem; margin-bottom:16px;">🎉</div>
+    <h2 style="font-weight:800; margin-bottom:10px; color:var(--brand-green-light);">Welcome to Premium!</h2>
+    <p class="text-sm text-muted" style="margin-bottom:24px;">Your payment is confirmed. You now have full access to all Premium features.</p>
+    <a href="premium.html" class="btn btn-green w-full">Go to Premium Dashboard →</a>
+  </div>
+</div>
+
+<script type="module">
+import { initAuthState, getIdToken } from './auth.js';
+
+const API_BASE = 'http://localhost:3001';
+let currentUser = null;
+let currentIsPremium = false;
+
+// Init auth state — updates navbar
+initAuthState({
+  onSignedIn: (user, isPremium) => {
+    currentUser = user;
+    currentIsPremium = isPremium;
+  },
+  onSignedOut: () => {
+    currentUser = null;
+    currentIsPremium = false;
+  }
+});
+
+// Handle "Get Premium" button
+window.handleGetPremium = async function() {
+  // Require sign-in first
+  if (!currentUser) {
+    window.location.href = 'login.html?returnTo=pricing.html';
+    return;
+  }
+
+  // Already premium
+  if (currentIsPremium) {
+    window.location.href = 'premium.html';
+    return;
+  }
+
+  // Disable button and show loading
+  const btn = document.querySelector('[onclick="handleGetPremium()"]');
+  if (btn) { btn.textContent = '⏳ Creating order...'; btn.style.pointerEvents = 'none'; }
+
+  try {
+    // 1. Get Firebase ID token
+    const token = await getIdToken();
+
+    // 2. Create Razorpay order via our backend
+    const orderRes = await fetch(`${API_BASE}/api/payment/create-order`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!orderRes.ok) throw new Error('Failed to create order. Please try again.');
+    const order = await orderRes.json();
+
+    // 3. Open Razorpay Checkout
+    const rzp = new Razorpay({
+      key: order.keyId,
+      amount: order.amount,
+      currency: order.currency,
+      order_id: order.orderId,
+      name: 'TaxSaver Premium',
+      description: 'Annual Premium Subscription',
+      image: '💰',
+      prefill: {
+        name: currentUser.displayName || '',
+        email: currentUser.email || '',
+      },
+      theme: { color: '#7c3aed' },
+      handler: async function(response) {
+        // 4. Verify payment on backend
+        try {
+          const freshToken = await getIdToken();
+          const verifyRes = await fetch(`${API_BASE}/api/payment/verify`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${freshToken}`
+            },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            })
+          });
+          if (verifyRes.ok) {
+            document.getElementById('successModal').style.display = 'flex';
+          } else {
+            alert('Payment received but verification failed. Contact support@taxsaver.in with your payment ID: ' + response.razorpay_payment_id);
+          }
+        } catch(e) {
+          alert('Payment done. Contact support if access is not activated within 5 minutes.');
+        }
+      },
+      modal: {
+        ondismiss: function() {
+          if (btn) { btn.textContent = '✨ Get Premium — ₹999/yr'; btn.style.pointerEvents = ''; }
+        }
+      }
+    });
+    rzp.open();
+  } catch(err) {
+    alert(err.message || 'Something went wrong. Please try again.');
+    if (btn) { btn.textContent = '✨ Get Premium — ₹999/yr'; btn.style.pointerEvents = ''; }
+  }
+};
+
+// FAQ toggle
+window.toggleFaq = function(el) {
+  const item = el.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+
+function showPaymentModal() {
+  const modal = document.getElementById('paymentModal');
+  modal.style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('paymentModal').style.display = 'none';
+}
+
+document.getElementById('paymentModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>

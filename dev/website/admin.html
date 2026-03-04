@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚙️ Admin Panel — TaxSaver</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { padding-top: 32px; } /* space for admin banner */
+    .dev-badge { position:fixed; top:0; right:12px; background:#f59e0b; color:#000; font-size:0.72rem; font-weight:800; padding:4px 12px; border-radius:0 0 8px 8px; letter-spacing:0.08em; text-transform:uppercase; z-index:10000; }
+    .stat-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:32px; }
+    .stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px 22px; }
+    .stat-label { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--gray-500); margin-bottom:8px; }
+    .stat-value { font-size:2rem; font-weight:900; letter-spacing:-1px; }
+    .stat-sub { font-size:0.78rem; color:var(--gray-500); margin-top:4px; }
+    .stat-card.green { border-color:rgba(16,185,129,0.3); }
+    .stat-card.green .stat-value { color:var(--brand-green-light); }
+    .stat-card.purple { border-color:rgba(124,58,237,0.3); }
+    .stat-card.purple .stat-value { color:var(--brand-purple-light); }
+    .stat-card.amber { border-color:rgba(245,158,11,0.3); }
+    .stat-card.amber .stat-value { color:#fbbf24; }
+    .stat-card.blue { border-color:rgba(59,130,246,0.3); }
+    .stat-card.blue .stat-value { color:#60a5fa; }
+
+    .section-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:24px; }
+    .section-card h3 { font-weight:700; font-size:1rem; margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+
+    .user-table { width:100%; border-collapse:collapse; }
+    .user-table th { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--gray-500); padding:8px 12px; text-align:left; border-bottom:1px solid var(--border); }
+    .user-table td { padding:12px 12px; font-size:0.85rem; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+    .user-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .user-table tr:last-child td { border-bottom:none; }
+
+    .badge-premium { background:rgba(16,185,129,0.15); color:var(--brand-green-light); border:1px solid rgba(16,185,129,0.3); font-size:0.7rem; font-weight:700; padding:3px 10px; border-radius:20px; }
+    .badge-free { background:rgba(156,163,175,0.1); color:var(--gray-500); border:1px solid rgba(156,163,175,0.2); font-size:0.7rem; font-weight:700; padding:3px 10px; border-radius:20px; }
+    .badge-admin { background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); font-size:0.7rem; font-weight:700; padding:3px 10px; border-radius:20px; }
+
+    .toggle-btn { font-size:0.75rem; padding:5px 12px; border-radius:20px; border:none; cursor:pointer; font-weight:700; transition:all 0.2s; }
+    .toggle-btn.revoke { background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.3); }
+    .toggle-btn.grant  { background:rgba(16,185,129,0.12); color:var(--brand-green-light); border:1px solid rgba(16,185,129,0.3); }
+    .toggle-btn:hover { transform:scale(1.04); }
+    .toggle-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+    .mini-chart { display:flex; align-items:flex-end; gap:4px; height:40px; }
+    .bar { border-radius:3px 3px 0 0; flex:1; min-width:8px; opacity:0.8; }
+
+    .access-denied { text-align:center; padding:80px 24px; }
+    .access-denied .icon { font-size:4rem; margin-bottom:16px; }
+  </style>
+</head>
+<body>
+
+<div class="dev-badge">⚙️ ADMIN</div>
+
+<!-- Navbar -->
+<nav class="navbar" style="top:32px;">
+  <div class="container navbar-inner">
+    <a href="index.html" style="font-size:1.1rem; font-weight:900; color:#f59e0b;">🧪 TaxSaver DEV</a>
+    <ul class="navbar-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="app.html">Calculator</a></li>
+      <li><a href="premium.html">Premium</a></li>
+      <li><a href="pricing.html">Pricing</a></li>
+      <li><a href="admin.html" class="active" style="color:#f59e0b;">⚙️ Admin</a></li>
+    </ul>
+    <div class="navbar-cta" style="gap:10px;">
+      <div id="navAvatar" title="" style="display:none; width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#dc2626,#b91c1c); align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; overflow:hidden; cursor:pointer;">
+        <img src="" style="width:100%; height:100%; object-fit:cover; display:none;" alt="Avatar">
+        <span class="initials">A</span>
+      </div>
+      <a href="login.html" id="navAuthBtn" class="btn btn-outline btn-sm">Sign In</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Access Denied (shown if not admin) -->
+<div id="accessDenied" class="container access-denied" style="display:none;">
+  <div class="icon">🚫</div>
+  <h2 style="font-weight:800; margin-bottom:12px;">Admin Access Required</h2>
+  <p class="text-muted" style="margin-bottom:24px;">You must be signed in as an admin to view this page.</p>
+  <a href="login.html?role=admin" class="btn btn-premium">Sign In as Admin →</a>
+</div>
+
+<!-- Admin Dashboard (shown only to admins) -->
+<div id="adminDashboard" style="display:none;">
+<div class="container" style="padding-top:40px; padding-bottom:80px;">
+
+  <!-- Header -->
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:32px;">
+    <div>
+      <span class="badge" style="background:rgba(245,158,11,0.15); color:#f59e0b; border-color:rgba(245,158,11,0.3); margin-bottom:10px; display:inline-block;">⚙️ Admin Panel</span>
+      <h1 style="font-weight:900; font-size:1.8rem; margin:0;">TaxSaver Dashboard</h1>
+      <p class="text-sm text-muted mt-sm">Real-time overview of users, revenue, and premium conversions</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-outline btn-sm" onclick="refreshAll()">🔄 Refresh</button>
+      <a href="test.html" class="btn btn-outline btn-sm">🧪 E2E Tests</a>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stat-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">All time registrations</div></div>
+    <div class="stat-card green"><div class="stat-label">Premium Users</div><div class="stat-value" id="statPremium">—</div><div class="stat-sub" id="statConversion">—</div></div>
+    <div class="stat-card purple"><div class="stat-label">Annual Revenue (ARR)</div><div class="stat-value" id="statARR">—</div><div class="stat-sub" id="statMRR">—</div></div>
+    <div class="stat-card amber"><div class="stat-label">Free Users</div><div class="stat-value" id="statFree">—</div><div class="stat-sub">Upgrade opportunity</div></div>
+    <div class="stat-card blue"><div class="stat-label">New This Month</div><div class="stat-value" id="statNew">—</div><div class="stat-sub" id="statChurn">—</div></div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:2fr 1fr; gap:24px;">
+    <!-- User Table -->
+    <div class="section-card">
+      <h3>👥 All Users <span id="userCountBadge" class="badge" style="margin-left:4px;"></span></h3>
+      <div style="overflow-x:auto;">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>UID</th>
+              <th>Joined</th>
+              <th>Status</th>
+              <th>Last Payment</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <tr><td colspan="6" style="text-align:center; color:var(--gray-600); padding:24px;">Loading users...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div>
+      <!-- Conversion Funnel -->
+      <div class="section-card">
+        <h3>📊 Conversion</h3>
+        <div id="funnelChart" style="display:flex; flex-direction:column; gap:10px;"></div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section-card">
+        <h3>⚡ Quick Actions</h3>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="viewAs('regular')">👤 View site as Free User</button>
+          <button class="btn btn-outline btn-sm" onclick="viewAs('premium')">✨ View site as Premium User</button>
+          <a href="test.html" class="btn btn-outline btn-sm" style="text-align:center;">🧪 Run E2E Test Suite</a>
+          <button class="btn btn-sm" style="background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.3);" onclick="resetTestUser()">🔁 Reset Test User to Free</button>
+        </div>
+      </div>
+
+      <!-- System Health -->
+      <div class="section-card">
+        <h3>🖥️ System Health</h3>
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem;">
+          <div style="display:flex; justify-content:space-between;">
+            <span class="text-muted">Mock API</span>
+            <span id="healthStatus" style="font-weight:600;">Checking...</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span class="text-muted">Auth</span>
+            <span style="color:var(--brand-green-light); font-weight:600;">✅ Firebase (Mock)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span class="text-muted">Payments</span>
+            <span style="color:var(--brand-green-light); font-weight:600;">✅ Razorpay (Mock)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span class="text-muted">Database</span>
+            <span style="color:var(--brand-green-light); font-weight:600;">✅ Firestore (Mock)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script type="module">
+import { initAuthState, getIdToken } from './auth.js';
+
+const API = 'http://localhost:3001';
+let adminToken = null;
+
+initAuthState({
+  requireAuth: true,
+  onSignedIn: async (user, isPremium, isAdmin) => {
+    if (!isAdmin) {
+      document.getElementById('accessDenied').style.display = 'block';
+      return;
+    }
+    adminToken = await user.getIdToken();
+    document.getElementById('adminDashboard').style.display = 'block';
+    await refreshAll();
+  },
+  onSignedOut: () => {
+    document.getElementById('accessDenied').style.display = 'block';
+  }
+});
+
+async function apiGet(path) {
+  const res = await fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${adminToken}` } });
+  return res.json();
+}
+async function apiPost(path, body) {
+  const res = await fetch(`${API}${path}`, { method: 'POST', headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  return res.json();
+}
+
+window.refreshAll = async function() {
+  loadStats();
+  loadUsers();
+  checkHealth();
+};
+
+async function loadStats() {
+  try {
+    const s = await apiGet('/api/admin/stats');
+    document.getElementById('statTotal').textContent   = s.totalUsers;
+    document.getElementById('statPremium').textContent = s.premiumUsers;
+    document.getElementById('statConversion').textContent = `Conversion: ${s.conversionRate}`;
+    document.getElementById('statARR').textContent = `₹${(s.arr).toLocaleString('en-IN')}`;
+    document.getElementById('statMRR').textContent = `MRR ₹${(s.mrr).toLocaleString('en-IN')}/mo`;
+    document.getElementById('statFree').textContent  = s.freeUsers;
+    document.getElementById('statNew').textContent   = `+${s.newUsersThisMonth}`;
+    document.getElementById('statChurn').textContent = `Churn: ${s.churnRate}`;
+
+    // Funnel chart
+    const rate = parseFloat(s.conversionRate);
+    document.getElementById('funnelChart').innerHTML = `
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px;"><span class="text-muted">All Users</span><span style="font-weight:700;">${s.totalUsers}</span></div>
+        <div style="height:8px;background:rgba(124,58,237,0.3);border-radius:4px;overflow:hidden;"><div style="height:100%;width:100%;background:var(--brand-purple);border-radius:4px;"></div></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px;"><span class="text-muted">Premium</span><span style="font-weight:700;color:var(--brand-green-light);">${s.premiumUsers}</span></div>
+        <div style="height:8px;background:rgba(16,185,129,0.15);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${rate}%;background:var(--brand-green);border-radius:4px;"></div></div>
+      </div>
+      <div style="font-size:0.78rem;color:var(--gray-500);text-align:center;padding-top:4px;">Conversion: <strong style="color:var(--brand-green-light);">${s.conversionRate}</strong> of visitors upgrade</div>
+    `;
+  } catch(e) {
+    console.error('Stats load failed:', e);
+  }
+}
+
+async function loadUsers() {
+  try {
+    const users = await apiGet('/api/admin/users');
+    document.getElementById('userCountBadge').textContent = users.length;
+    const tbody = document.getElementById('userTableBody');
+    tbody.innerHTML = users.map(u => `
+      <tr id="row-${u.uid}">
+        <td>
+          <div style="font-weight:600;">${u.name}</div>
+          <div style="font-size:0.75rem;color:var(--gray-500);">${u.email}</div>
+        </td>
+        <td><code style="font-size:0.72rem;color:var(--gray-500);">${u.uid.slice(0,12)}…</code></td>
+        <td style="color:var(--gray-400); font-size:0.82rem;">${u.joinedAt}</td>
+        <td>
+          ${u.uid === 'admin-user-001'
+            ? '<span class="badge-admin">Admin</span>'
+            : u.isPremium
+              ? '<span class="badge-premium">✨ Premium</span>'
+              : '<span class="badge-free">Free</span>'
+          }
+        </td>
+        <td style="font-size:0.75rem;color:var(--gray-500);">${u.lastPaymentId || '—'}</td>
+        <td>
+          ${u.uid === 'admin-user-001' ? '<span style="font-size:0.75rem;color:var(--gray-600);">N/A</span>' : `
+            <button class="toggle-btn ${u.isPremium ? 'revoke' : 'grant'}" id="btn-${u.uid}" onclick="togglePremium('${u.uid}')">
+              ${u.isPremium ? 'Revoke' : 'Grant Premium'}
+            </button>
+          `}
+        </td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    document.getElementById('userTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#f87171;">Failed to load users — is the server running?</td></tr>';
+  }
+}
+
+window.togglePremium = async function(uid) {
+  const btn = document.getElementById(`btn-${uid}`);
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  const updated = await apiPost('/api/admin/users/toggle-premium', { uid });
+  if (updated.uid) await loadUsers(); // refresh table
+};
+
+async function checkHealth() {
+  try {
+    const res = await fetch(`${API}/health`);
+    const d = await res.json();
+    document.getElementById('healthStatus').innerHTML = `<span style="color:var(--brand-green-light);font-weight:600;">✅ ${d.status}</span>`;
+  } catch {
+    document.getElementById('healthStatus').innerHTML = `<span style="color:#f87171;font-weight:600;">❌ Offline</span>`;
+  }
+}
+
+// View site as a specific user type by switching role
+window.viewAs = function(role) {
+  if (role === 'premium') {
+    // Grant premium to test user first, then switch
+    fetch(`${API}/api/payment/verify`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer dev-test-token-12345', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ razorpay_order_id: 'order_preview', razorpay_payment_id: 'pay_preview', razorpay_signature: 'sig_preview' })
+    }).then(() => {
+      localStorage.setItem('dev_auth_role', 'regular');
+      window.open('premium.html', '_blank');
+    });
+  } else {
+    fetch(`${API}/api/dev/reset`).then(() => {
+      localStorage.setItem('dev_auth_role', 'regular');
+      window.open('index.html', '_blank');
+    });
+  }
+};
+
+window.resetTestUser = async function() {
+  await fetch(`${API}/api/dev/reset`);
+  alert('Test user reset to Free plan.');
+  loadUsers();
+};
+</script>
+</body>
+</html>
