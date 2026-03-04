@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaxSaver — Free Tax Calculator | FY 2025-26</title>
+  <meta name="description" content="Free Indian income tax calculator for FY 2025-26. Compare old vs new regime, get personalized deduction tips. Updated for Budget 2025.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* App-specific overrides */
+    body { background: var(--bg-dark); }
+    .app-layout { display: grid; grid-template-columns: 380px 1fr; gap: 32px; align-items: start; padding: 40px 0; }
+    .sidebar { position: sticky; top: 130px; }
+    .main-content { min-width: 0; }
+
+    /* Input Panel */
+    .input-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .input-panel-header { padding: 20px 24px; border-bottom: 1px solid var(--border); background: rgba(124,58,237,0.06); }
+    .input-panel-header h2 { font-size: 1rem; font-weight: 700; }
+    .input-section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+    .input-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gray-400); margin-bottom: 16px; }
+    .input-row { margin-bottom: 14px; }
+
+    /* Results Panel */
+    .results-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+    .results-grid .result-card.full { grid-column: 1 / -1; }
+
+    /* Inline regime tabs */
+    .regime-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .regime-tab { padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border); font-size: 0.82rem; font-weight: 600; text-align: center; cursor: pointer; color: var(--gray-400); background: transparent; transition: all 0.2s; }
+    .regime-tab.active { border-color: var(--brand-purple); background: rgba(124,58,237,0.15); color: var(--brand-purple-light); }
+
+    /* Age selector */
+    .age-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .age-btn { padding: 8px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 0.75rem; font-weight: 600; text-align: center; cursor: pointer; color: var(--gray-400); background: transparent; transition: all 0.2s; line-height: 1.3; }
+    .age-btn.active { border-color: var(--brand-green); background: rgba(16,185,129,0.12); color: var(--brand-green-light); }
+
+    /* Suggestions */
+    .suggestion-card { display: flex; align-items: flex-start; gap: 14px; padding: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 10px; }
+    .suggestion-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .suggestion-title { font-size: 0.875rem; font-weight: 700; margin-bottom: 3px; }
+    .suggestion-desc { font-size: 0.8rem; color: var(--gray-400); }
+    .suggestion-saving { font-size: 0.78rem; font-weight: 700; color: var(--brand-green-light); margin-top: 4px; }
+
+    /* Lock card */
+    .lock-card { 
+      background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(79,70,229,0.08));
+      border: 1.5px dashed rgba(124,58,237,0.4);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* Blur rows */
+    .blurred-row { filter: blur(4px); pointer-events: none; user-select: none; opacity: 0.6; }
+
+    @media (max-width: 900px) {
+      .app-layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ─────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html" class="navbar-logo gradient-text">💰 TaxSaver</a>
+    <ul class="navbar-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="app.html" class="active">Calculator</a></li>
+      <li><a href="premium.html">Premium</a></li>
+      <li><a href="pricing.html">Pricing</a></li>
+    </ul>
+    <div class="navbar-cta">
+      <a href="pricing.html" class="btn btn-premium btn-sm">✨ Upgrade to Premium</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Premium Sticky Banner ───────────────────────────── -->
+<div class="premium-banner" id="premiumBanner">
+  <div class="premium-banner-inner">
+    <span class="premium-banner-text">💡 Based on your inputs, you could save an extra</span>
+    <span class="amount" id="extraSavings">₹0</span>
+    <span class="premium-banner-text">with Premium AI optimization.</span>
+    <a href="pricing.html" class="btn btn-sm" style="background:rgba(255,255,255,0.2); color:#fff; padding: 6px 14px; border-radius: 20px;">Unlock →</a>
+  </div>
+</div>
+
+<!-- ── App Layout ──────────────────────────────────────── -->
+<div class="container">
+  <div class="app-layout">
+
+    <!-- ── Sidebar: Inputs ── -->
+    <aside class="sidebar">
+      <div class="input-panel">
+        <div class="input-panel-header">
+          <h2>📝 Your Tax Details</h2>
+          <p class="text-xs text-muted mt-sm">FY 2025-26 (AY 2026-27) · Budget 2025 Updated</p>
+        </div>
+
+        <!-- Tax Regime -->
+        <div class="input-section">
+          <div class="input-section-title">Tax Regime</div>
+          <div class="regime-tabs">
+            <button class="regime-tab active" onclick="selectRegime('old', this)" id="tab-old">⚖️ Old Regime</button>
+            <button class="regime-tab" onclick="selectRegime('new', this)" id="tab-new">⚡ New Regime</button>
+          </div>
+          <div class="alert alert-info mt-sm text-xs" id="regimeHint">Old regime: All deductions under 80C, 80D, HRA, etc.</div>
+        </div>
+
+        <!-- Age Group -->
+        <div class="input-section">
+          <div class="input-section-title">Age Group</div>
+          <div class="age-grid">
+            <button class="age-btn active" onclick="selectAge('below60', this)">Below 60<br><span style="color:var(--gray-600)">₹2.5L exempt</span></button>
+            <button class="age-btn" onclick="selectAge('senior', this)">60–79 Yrs<br><span style="color:var(--gray-600)">₹3L exempt</span></button>
+            <button class="age-btn" onclick="selectAge('superSenior', this)">80+ Yrs<br><span style="color:var(--gray-600)">₹5L exempt</span></button>
+          </div>
+        </div>
+
+        <!-- Income -->
+        <div class="input-section">
+          <div class="input-section-title">Income Sources</div>
+          <div class="input-row">
+            <label class="form-label">Gross Salary (Annual)</label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="salary" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">House Property Income</label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="houseProperty" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">Capital Gains (STCG + LTCG)</label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="capitalGains" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">Other Income</label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="otherIncome" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+        </div>
+
+        <!-- Deductions -->
+        <div class="input-section" id="deductionsSection">
+          <div class="input-section-title">Deductions (Old Regime)</div>
+          <div class="input-row">
+            <label class="form-label">Section 80C <span class="text-muted">(max ₹1.5L)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="section80c" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">Section 80D Health Insurance <span class="text-muted">(max ₹1L)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="section80d" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">NPS 80CCD(1B) <span class="text-muted">(max ₹50k)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="section80ccd1b" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">🆕 NPS Vatsalya <span class="text-muted">(max ₹50k)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="npsVatsalya" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">Home Loan Interest Sec 24 <span class="text-muted">(max ₹2L)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="homeLoanInterest" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">HRA Exemption</label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="hra" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">LTA</label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="lta" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">Education Loan 80E <span class="text-muted">(no limit)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="section80e" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label" id="lbl80tta">80TTA Savings Interest <span class="text-muted">(max ₹10k)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="section80tta" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">80GG Rent (no HRA) <span class="text-muted">(max ₹60k)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="section80gg" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">80DD Disability—Dep.</label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="section80dd" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label" id="lbl80ddb">80DDB Critical Illness <span class="text-muted" id="hint80ddb">(max ₹40k)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="section80ddb" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">80U Self Disability</label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="section80u" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">80EEA Affordable Housing <span class="text-muted">(max ₹1.5L)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="section80eea" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">80G Donations <span class="text-muted">(50% allowed)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="section80g" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+          <div class="input-row">
+            <label class="form-label">Professional Tax <span class="text-muted">(max ₹2.5k)</span></label>
+            <div class="input-group"><span class="input-prefix">₹</span><input type="number" id="professionalTax" class="form-input has-prefix" placeholder="0" oninput="calculateTax()"></div>
+          </div>
+        </div>
+
+        <!-- Upload CTA -->
+        <div class="input-section" style="background: rgba(124,58,237,0.06);">
+          <div class="alert alert-premium">
+            <strong>⚡ Premium:</strong> Skip manual entry — upload your <strong>Form 16</strong> and we'll auto-fill everything above in seconds!
+          </div>
+          <a href="premium.html" class="btn btn-premium w-full mt-sm">📤 Upload Form 16 →</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Main Results ── -->
+    <main class="main-content">
+      <!-- Results Summary -->
+      <div class="results-grid">
+        <div class="result-card full" style="background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(79,70,229,0.08)); border-color: rgba(124,58,237,0.3);">
+          <div class="result-label">Total Tax Payable (incl. 4% cess)</div>
+          <div class="result-value large" id="totalTax">₹ 0</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Taxable Income</div>
+          <div class="result-value" id="taxableIncome">₹ 0</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Monthly Take-Home</div>
+          <div class="result-value success" id="takeHome">₹ 0</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Income Tax</div>
+          <div class="result-value" id="baseTax">₹ 0</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Health & Education Cess (4%)</div>
+          <div class="result-value" id="cess">₹ 0</div>
+        </div>
+      </div>
+
+      <!-- Tax Slab Breakdown -->
+      <div class="card mb-md" style="margin-bottom: 24px;">
+        <h3 style="font-weight:700; margin-bottom:16px;">📊 Tax Slab Breakdown</h3>
+        <table class="data-table">
+          <thead>
+            <tr><th>Income Slab</th><th>Rate</th><th>Tax Amount</th></tr>
+          </thead>
+          <tbody id="taxBreakdown">
+            <tr><td colspan="3" class="text-center text-muted" style="padding: 24px;">Enter income to see breakdown</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Old vs New Comparison -->
+      <div class="card" style="margin-bottom: 24px;">
+        <h3 style="font-weight:700; margin-bottom:16px;">⚖️ Old vs New Regime Comparison</h3>
+        <table class="data-table">
+          <thead>
+            <tr><th>Parameter</th><th>Old Regime</th><th>New Regime (FY 25-26)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Taxable Income</strong></td><td id="oldTaxableIncome">₹ 0</td><td id="newTaxableIncome">₹ 0</td></tr>
+            <tr><td><strong>Total Tax</strong></td><td id="oldTotalTax">₹ 0</td><td id="newTotalTax">₹ 0</td></tr>
+            <tr class="total"><td><strong>Annual Take-Home</strong></td><td id="oldTakeHome">₹ 0</td><td id="newTakeHome">₹ 0</td></tr>
+          </tbody>
+        </table>
+        <div class="alert alert-success mt-sm" id="recommendation" style="display:none;"></div>
+      </div>
+
+      <!-- Free Suggestions (limited to 2) -->
+      <div style="margin-bottom: 24px;">
+        <div class="d-flex align-center justify-between mb-sm">
+          <h3 style="font-weight:700;">💡 Investment Suggestions</h3>
+          <span class="badge badge-free">2 of 5 Free</span>
+        </div>
+        <div id="suggestions-free"></div>
+
+        <!-- Lock card for remaining suggestions -->
+        <div class="lock-card" id="suggestionLock">
+          <div style="font-size:2rem; margin-bottom:12px;">🔒</div>
+          <div style="font-weight:700; margin-bottom:6px;">3 more personalized suggestions</div>
+          <p class="text-sm text-muted" style="margin-bottom: 16px;">Upgrade to Premium to see your full AI-powered investment roadmap with exact amounts and expected tax savings.</p>
+          <a href="pricing.html" class="btn btn-premium btn-sm">✨ Unlock All Suggestions</a>
+        </div>
+      </div>
+
+      <!-- Blurred AI Insights (premium teaser) -->
+      <div style="margin-bottom: 24px; position: relative;">
+        <div class="d-flex align-center justify-between mb-sm">
+          <h3 style="font-weight:700;">🤖 AI Tax Optimization Report</h3>
+          <span class="badge badge-premium">Premium Only</span>
+        </div>
+        <div class="locked-section card">
+          <div class="locked-blur">
+            <p style="margin-bottom:12px; font-weight:600;">Your Personalized Tax Plan — FY 2025-26</p>
+            <p class="text-sm text-muted">Based on your salary of ₹15,00,000, we recommend switching to the Old Regime and making the following investments by March 31, 2026:</p>
+            <ul style="margin: 12px 0 12px 20px; font-size:0.875rem; color: var(--gray-300);">
+              <li>Maximize EPF/PPF/ELSS to ₹1,50,000 under Section 80C — saves ₹46,800</li>
+              <li>Buy family health insurance ₹50,000 under 80D — saves ₹15,600</li>
+              <li>Open NPS Tier 1, contribute ₹50,000 — saves ₹15,600</li>
+              <li>NPS Vatsalya for child — saves ₹15,600</li>
+              <li>Claim HRA of ₹1,80,000 if living on rent</li>
+            </ul>
+            <p style="font-weight:700; color: var(--brand-green);">Total Additional Savings: ₹93,600/year</p>
+          </div>
+          <div class="lock-overlay">
+            <div class="lock-icon">🔒</div>
+            <div class="lock-title">AI Optimization Report</div>
+            <div class="lock-desc">Upload your Form 16 or AIS to unlock a personalized, CA-verified tax optimization report.</div>
+            <a href="pricing.html" class="btn btn-premium btn-sm" style="margin-top:8px;">✨ Get Premium — ₹999/yr</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ITR Form Suggestion -->
+      <div class="card">
+        <h3 style="font-weight:700; margin-bottom:16px;">📋 Which ITR Form Should You Use?</h3>
+        <div class="result-card" style="text-align:left; margin-bottom:16px;">
+          <div class="result-label">Recommended Form</div>
+          <div class="result-value" id="itrForm">ITR-1 (Sahaj)</div>
+          <p id="itrFormDesc" class="text-sm text-muted mt-sm">For salary income up to ₹50L with no capital gains.</p>
+        </div>
+        <div class="alert alert-warning">
+          <strong>⏰ Deadline:</strong> File your ITR by <strong>July 31, 2026</strong> to avoid penalties.
+        </div>
+        <div class="alert alert-warning mt-sm">
+          <strong>💰 Surcharge Note:</strong> If income exceeds ₹50L, surcharge applies (max 25% new regime, 37% old regime). Not included in this calculator — consult a CA.
+        </div>
+        <a href="https://www.incometax.gov.in" target="_blank" class="btn btn-outline w-full mt-sm">🚀 File ITR on incometax.gov.in →</a>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── Footer ──────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="justify-content:center; flex-direction:column; text-align:center; gap:8px;">
+      <span class="text-muted text-sm">Tax rates as per FY 2025-26 (AY 2026-27) | For educational purposes — consult a CA for final filing.</span>
+      <div style="display:flex; gap:24px; justify-content:center;">
+        <a href="index.html" style="color:var(--gray-500); font-size:0.8rem;">Home</a>
+        <a href="pricing.html" style="color:var(--gray-500); font-size:0.8rem;">Pricing</a>
+        <a href="premium.html" style="color:var(--gray-500); font-size:0.8rem;">Premium</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── Constants ──────────────────────────────────────────
+let currentRegime = 'old';
+let currentAge = 'below60';
+
+const TAX_SLABS = {
+  old: [{ min:0,max:250000,rate:0 },{ min:250000,max:500000,rate:5 },{ min:500000,max:1000000,rate:20 },{ min:1000000,max:Infinity,rate:30 }],
+  old_senior: [{ min:0,max:300000,rate:0 },{ min:300000,max:500000,rate:5 },{ min:500000,max:1000000,rate:20 },{ min:1000000,max:Infinity,rate:30 }],
+  old_super_senior: [{ min:0,max:500000,rate:0 },{ min:500000,max:1000000,rate:20 },{ min:1000000,max:Infinity,rate:30 }],
+  new: [{ min:0,max:400000,rate:0 },{ min:400000,max:800000,rate:5 },{ min:800000,max:1200000,rate:10 },{ min:1200000,max:1600000,rate:15 },{ min:1600000,max:2000000,rate:20 },{ min:2000000,max:2400000,rate:25 },{ min:2400000,max:Infinity,rate:30 }]
+};
+const STD_OLD=50000, STD_NEW=75000, CESS=0.04;
+const REBATE_87A_OLD=12500, REBATE_87A_NEW=60000;
+const REBATE_LIMIT_OLD=500000, REBATE_LIMIT_NEW=1200000;
+
+function fmt(n) { return '₹ ' + Math.round(n).toLocaleString('en-IN'); }
+function val(id) { return Math.max(0, parseFloat(document.getElementById(id)?.value) || 0); }
+
+function getSlabKey() {
+  if (currentRegime !== 'old') return 'new';
+  if (currentAge === 'superSenior') return 'old_super_senior';
+  if (currentAge === 'senior') return 'old_senior';
+  return 'old';
+}
+
+function getAgeCaps() {
+  const senior = currentAge === 'senior' || currentAge === 'superSenior';
+  return { tta: senior ? 50000 : 10000, ddb: senior ? 100000 : 40000 };
+}
+
+function calcTaxForSlabKey(income, slabKey) {
+  const slabs = TAX_SLABS[slabKey];
+  let tax = 0, breakdown = [];
+  for (const s of slabs) {
+    if (income > s.min) {
+      const amt = (Math.min(income, s.max) - s.min) * s.rate / 100;
+      if (amt > 0) { tax += amt; breakdown.push({ slab: `₹${s.min.toLocaleString()}–${s.max===Infinity?'Above':'₹'+s.max.toLocaleString()}`, rate: s.rate+'%', amt }); }
+    }
+  }
+  return { tax, breakdown };
+}
+
+function applyRebateAndCess(baseTax, taxableIncome, regime, age) {
+  let after = baseTax;
+  if (regime === 'new' && taxableIncome <= REBATE_LIMIT_NEW) after = Math.max(0, baseTax - REBATE_87A_NEW);
+  else if (regime === 'old' && age !== 'superSenior' && taxableIncome <= REBATE_LIMIT_OLD) after = Math.max(0, baseTax - REBATE_87A_OLD);
+  return { net: after, cess: after * CESS, total: after + after * CESS };
+}
+
+function selectRegime(regime, btn) {
+  currentRegime = regime;
+  document.querySelectorAll('.regime-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const ds = document.getElementById('deductionsSection');
+  ds.style.opacity = regime === 'new' ? '0.4' : '1';
+  ds.style.pointerEvents = regime === 'new' ? 'none' : '';
+  const hint = document.getElementById('regimeHint');
+  hint.textContent = regime === 'new' ? 'New regime: Only ₹75,000 standard deduction. Zero tax up to ₹12L income!' : 'Old regime: All deductions under 80C, 80D, HRA, HLI, etc.';
+  calculateTax();
+}
+
+function selectAge(age, btn) {
+  currentAge = age;
+  document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const caps = getAgeCaps();
+  const isSenior = age === 'senior' || age === 'superSenior';
+  document.getElementById('lbl80tta').innerHTML = isSenior ? '80TTB Savings Interest <span class="text-muted">(max ₹50k)</span>' : '80TTA Savings Interest <span class="text-muted">(max ₹10k)</span>';
+  document.getElementById('hint80ddb').textContent = isSenior ? '(max ₹1L)' : '(max ₹40k)';
+  calculateTax();
+}
+
+function calculateTax() {
+  const salary = val('salary'), houseProperty = val('houseProperty'), capitalGains = val('capitalGains'), otherIncome = val('otherIncome');
+  const gross = salary + houseProperty + capitalGains + otherIncome;
+  const caps = getAgeCaps();
+
+  let deductions = 0;
+  if (currentRegime === 'old') {
+    deductions = Math.min(val('section80c'),150000) + Math.min(val('section80d'),100000)
+      + Math.min(val('section80ccd1b'),50000) + Math.min(val('npsVatsalya'),50000)
+      + Math.min(val('homeLoanInterest'),200000) + val('hra') + val('lta')
+      + val('section80e') + Math.min(val('professionalTax'),2500)
+      + Math.min(val('section80tta'),caps.tta) + Math.min(val('section80gg'),60000)
+      + Math.min(val('section80dd'),125000) + Math.min(val('section80ddb'),caps.ddb)
+      + Math.min(val('section80u'),125000) + Math.min(val('section80eea'),150000)
+      + val('section80g') * 0.5 + STD_OLD;
+  } else {
+    deductions = STD_NEW;
+  }
+
+  const taxable = Math.max(0, gross - deductions);
+  const { tax: base, breakdown } = calcTaxForSlabKey(taxable, getSlabKey());
+  const { net, cess, total } = applyRebateAndCess(base, taxable, currentRegime, currentAge);
+
+  document.getElementById('taxableIncome').textContent = fmt(taxable);
+  document.getElementById('baseTax').textContent = fmt(net);
+  document.getElementById('cess').textContent = fmt(cess);
+  document.getElementById('totalTax').textContent = fmt(total);
+  document.getElementById('takeHome').textContent = fmt((gross - total) / 12);
+
+  // Update premium banner
+  const premiumSaving = gross * 0.06; // estimate
+  document.getElementById('extraSavings').textContent = fmt(premiumSaving);
+
+  updateBreakdown(breakdown, net, cess);
+  updateComparison(gross);
+  updateSuggestions();
+  updateITR(gross, houseProperty, capitalGains);
+}
+
+function updateBreakdown(breakdown, net, cess) {
+  const tbody = document.getElementById('taxBreakdown');
+  if (!breakdown.length) { tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted" style="padding:24px;">No tax applicable — you\'re in the zero-tax zone! 🎉</td></tr>'; return; }
+  const rows = breakdown.map(b => `<tr><td>${b.slab}</td><td>${b.rate}</td><td><strong>${fmt(b.amt)}</strong></td></tr>`).join('');
+  tbody.innerHTML = rows + `<tr class="total"><td colspan="2">Total Tax Payable (after rebate + cess)</td><td><strong>${fmt(net + cess)}</strong></td></tr>`;
+}
+
+function updateComparison(gross) {
+  // Old regime
+  const caps = getAgeCaps();
+  const oldDed = Math.min(val('section80c'),150000) + Math.min(val('section80d'),100000)
+    + Math.min(val('section80ccd1b'),50000) + Math.min(val('npsVatsalya'),50000)
+    + Math.min(val('homeLoanInterest'),200000) + val('hra') + val('lta') + STD_OLD
+    + val('section80e') + Math.min(val('professionalTax'),2500) + Math.min(val('section80tta'),caps.tta)
+    + Math.min(val('section80gg'),60000) + Math.min(val('section80dd'),125000)
+    + Math.min(val('section80ddb'),caps.ddb) + Math.min(val('section80u'),125000)
+    + Math.min(val('section80eea'),150000) + val('section80g') * 0.5;
+  const oldSlabKey = currentAge === 'superSenior' ? 'old_super_senior' : currentAge === 'senior' ? 'old_senior' : 'old';
+  const oldTaxable = Math.max(0, gross - oldDed);
+  const oldBase = calcTaxForSlabKey(oldTaxable, oldSlabKey).tax;
+  const { total: oldTotal } = applyRebateAndCess(oldBase, oldTaxable, 'old', currentAge);
+
+  // New regime
+  const newTaxable = Math.max(0, gross - STD_NEW);
+  const newBase = calcTaxForSlabKey(newTaxable, 'new').tax;
+  const { total: newTotal } = applyRebateAndCess(newBase, newTaxable, 'new', currentAge);
+
+  document.getElementById('oldTaxableIncome').textContent = fmt(oldTaxable);
+  document.getElementById('newTaxableIncome').textContent = fmt(newTaxable);
+  document.getElementById('oldTotalTax').textContent = fmt(oldTotal);
+  document.getElementById('newTotalTax').textContent = fmt(newTotal);
+  document.getElementById('oldTakeHome').textContent = fmt(gross - oldTotal);
+  document.getElementById('newTakeHome').textContent = fmt(gross - newTotal);
+
+  const rec = document.getElementById('recommendation');
+  if (oldTotal < newTotal) {
+    rec.textContent = `💡 Old Regime wins! Save ${fmt(newTotal - oldTotal)} in taxes.`; rec.style.display = '';
+  } else if (newTotal < oldTotal) {
+    rec.textContent = `💡 New Regime wins! Save ${fmt(oldTotal - newTotal)} in taxes.`; rec.style.display = '';
+  } else { rec.style.display = 'none'; }
+}
+
+function updateSuggestions() {
+  const allSuggestions = [];
+  const rem80c = 150000 - Math.min(val('section80c'),150000);
+  const rem80d = 100000 - Math.min(val('section80d'),100000);
+  const remNps = 50000 - Math.min(val('section80ccd1b'),50000);
+  const remVatsalya = 50000 - Math.min(val('npsVatsalya'),50000);
+  const remEea = 150000 - Math.min(val('section80eea'),150000);
+
+  if (rem80c > 0) allSuggestions.push({ icon:'📊', title:'Maximize Section 80C', desc:`Invest ₹${rem80c.toLocaleString()} in PPF, ELSS, or EPF (3-year lock-in for ELSS)`, saving: fmt(rem80c * 0.312) });
+  if (rem80d > 0) allSuggestions.push({ icon:'🏥', title:'Boost Health Insurance (80D)', desc:`Add ₹${rem80d.toLocaleString()} more in health insurance for self + parents`, saving: fmt(rem80d * 0.312) });
+  if (remNps > 0) allSuggestions.push({ icon:'👴', title:'Open NPS Tier-1 (80CCD1B)', desc:`Invest ₹${remNps.toLocaleString()} in NPS — additional over 80C`, saving: fmt(remNps * 0.312) });
+  if (remVatsalya > 0) allSuggestions.push({ icon:'🆕', title:'NPS Vatsalya for Children', desc:`Contribute ₹${remVatsalya.toLocaleString()} — new Budget 2025 benefit!`, saving: fmt(remVatsalya * 0.312) });
+  if (remEea > 0) allSuggestions.push({ icon:'🏡', title:'Affordable Housing 80EEA', desc:`Claim additional ₹${remEea.toLocaleString()} on home loan interest`, saving: fmt(remEea * 0.312) });
+
+  const container = document.getElementById('suggestions-free');
+  const lockEl = document.getElementById('suggestionLock');
+  if (!allSuggestions.length) {
+    container.innerHTML = '<div class="alert alert-success">🎉 You\'re maximizing all major deductions!</div>';
+    lockEl.style.display = 'none';
+    return;
+  }
+  const free = allSuggestions.slice(0, 2);
+  container.innerHTML = free.map(s => `
+    <div class="suggestion-card">
+      <div class="suggestion-icon">${s.icon}</div>
+      <div>
+        <div class="suggestion-title">${s.title}</div>
+        <div class="suggestion-desc">${s.desc}</div>
+        <div class="suggestion-saving">Potential saving: ${s.saving}</div>
+      </div>
+    </div>`).join('');
+  lockEl.style.display = allSuggestions.length > 2 ? '' : 'none';
+}
+
+function updateITR(gross, hp, cg) {
+  let form = 'ITR-1 (Sahaj)', desc = 'For salary income up to ₹50L with no capital gains.';
+  if (gross > 5000000 || cg > 0 || hp > 0) { form = 'ITR-2'; desc = 'Recommended: you have capital gains or house property income.'; }
+  document.getElementById('itrForm').textContent = form;
+  document.getElementById('itrFormDesc').textContent = desc;
+}
+
+// Init
+calculateTax();
+</script>
+</body>
+</html>
