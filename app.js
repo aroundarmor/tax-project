@@ -9,9 +9,21 @@ let currentRegime = 'old';
 
 // Tax Slabs for FY 2025-26 (AY 2026-27) - Budget 2025
 const TAX_SLABS = {
+    // Old Regime: different basic exemptions by age
     old: [
-        { min: 0, max: 250000, rate: 0 },
+        { min: 0, max: 250000, rate: 0 },        // Below 60 years
         { min: 250000, max: 500000, rate: 5 },
+        { min: 500000, max: 1000000, rate: 20 },
+        { min: 1000000, max: Infinity, rate: 30 }
+    ],
+    old_senior: [
+        { min: 0, max: 300000, rate: 0 },        // Senior Citizens (60-79 years)
+        { min: 300000, max: 500000, rate: 5 },
+        { min: 500000, max: 1000000, rate: 20 },
+        { min: 1000000, max: Infinity, rate: 30 }
+    ],
+    old_super_senior: [
+        { min: 0, max: 500000, rate: 0 },        // Super Senior Citizens (80+ years) - NO rebate 87A needed
         { min: 500000, max: 1000000, rate: 20 },
         { min: 1000000, max: Infinity, rate: 30 }
     ],
@@ -33,7 +45,31 @@ const HEALTH_EDUCATION_CESS = 0.04;        // 4%
 const REBATE_87A_OLD = 12500;              // Old regime rebate
 const REBATE_87A_NEW = 60000;              // New regime rebate - increased from 25k to 60k
 const REBATE_LIMIT_OLD = 500000;           // Old regime rebate income limit
-const REBATE_LIMIT_NEW = 1200000;          // New regime rebate income limit - increased from 7L to 12L
+const REBATE_LIMIT_NEW = 1200000;          // New regime rebate income limit
+
+// Helper: Get age group from the selector
+function getAgeGroup() {
+    const el = document.querySelector('input[name="ageGroup"]:checked');
+    return el ? el.value : 'below60';
+}
+
+// Helper: Get the correct old-regime slab key based on age
+function getOldRegimeSlabKey() {
+    const age = getAgeGroup();
+    if (age === 'superSenior') return 'old_super_senior';
+    if (age === 'senior') return 'old_senior';
+    return 'old';
+}
+
+// Helper: Get age-aware deduction caps
+function getAgeAwareCaps() {
+    const age = getAgeGroup();
+    const isSenior = (age === 'senior' || age === 'superSenior');
+    return {
+        section80tta: isSenior ? 50000 : 10000,  // 80TTB for seniors (₹50k), 80TTA for others (₹10k)
+        section80ddb: isSenior ? 100000 : 40000,  // ₹1L for seniors, ₹40k for others
+    };
+}
 
 // ============================================
 // Tax Regime Selection
@@ -83,7 +119,9 @@ function formatCurrency(amount) {
 // Calculate Tax for a Given Regime
 // ============================================
 function calculateTaxForRegime(taxableIncome, regime) {
-    const slabs = TAX_SLABS[regime];
+    // Use age-appropriate slab for old regime
+    const slabKey = (regime === 'old') ? getOldRegimeSlabKey() : regime;
+    const slabs = TAX_SLABS[slabKey];
     let tax = 0;
     let breakdown = [];
 
@@ -127,6 +165,7 @@ function calculateTax() {
     let totalDeductions = 0;
 
     if (currentRegime === 'old') {
+        const ageCaps = getAgeAwareCaps();
         const section80c = Math.min(getInputValue('section80c'), 150000);
         const section80d = Math.min(getInputValue('section80d'), 100000);
         const section80ccd1b = Math.min(getInputValue('section80ccd1b'), 50000);
@@ -135,13 +174,13 @@ function calculateTax() {
         const hra = getInputValue('hra');
         const lta = getInputValue('lta');
 
-        // NEW deductions - Comprehensive list
+        // Comprehensive deductions (with age-aware limits)
         const section80e = getInputValue('section80e');  // No limit
         const professionalTax = Math.min(getInputValue('professionalTax'), 2500);
-        const section80tta = Math.min(getInputValue('section80tta'), 50000);
+        const section80tta = Math.min(getInputValue('section80tta'), ageCaps.section80tta); // 10k (<60), 50k (seniors - 80TTB)
         const section80gg = Math.min(getInputValue('section80gg'), 60000);
         const section80dd = Math.min(getInputValue('section80dd'), 125000);
-        const section80ddb = Math.min(getInputValue('section80ddb'), 100000);
+        const section80ddb = Math.min(getInputValue('section80ddb'), ageCaps.section80ddb); // 40k (<60), 1L (seniors)
         const section80u = Math.min(getInputValue('section80u'), 125000);
         const section80eea = Math.min(getInputValue('section80eea'), 150000);
         const section80g = getInputValue('section80g') * 0.5;  // 50% deduction
@@ -172,8 +211,8 @@ function calculateTax() {
         // New regime: ₹60,000 rebate for income up to ₹12 lakh
         rebateApplied = Math.min(baseTax, REBATE_87A_NEW);
         finalBaseTax = Math.max(0, baseTax - rebateApplied);
-    } else if (currentRegime === 'old' && taxableIncome <= REBATE_LIMIT_OLD) {
-        // Old regime: ₹12,500 rebate for income up to ₹5 lakh
+    } else if (currentRegime === 'old' && getAgeGroup() !== 'superSenior' && taxableIncome <= REBATE_LIMIT_OLD) {
+        // Old regime: ₹12,500 rebate for income up to ₹5 lakh (not available to super senior - they get full exemption via slab)
         rebateApplied = Math.min(baseTax, REBATE_87A_OLD);
         finalBaseTax = Math.max(0, baseTax - rebateApplied);
     }
@@ -254,7 +293,8 @@ function updateTaxBreakdown(breakdown, finalTax, cess) {
 // Regime Comparison
 // ============================================
 function calculateRegimeComparison(grossIncome) {
-    // Calculate for old regime with deductions
+    // Calculate for old regime with deductions (age-aware)
+    const ageCaps = getAgeAwareCaps();
     const section80c = Math.min(getInputValue('section80c'), 150000);
     const section80d = Math.min(getInputValue('section80d'), 100000);
     const section80ccd1b = Math.min(getInputValue('section80ccd1b'), 50000);
@@ -263,13 +303,13 @@ function calculateRegimeComparison(grossIncome) {
     const hra = getInputValue('hra');
     const lta = getInputValue('lta');
 
-    // NEW deductions
+    // Deductions with age-aware limits
     const section80e = getInputValue('section80e');
     const professionalTax = Math.min(getInputValue('professionalTax'), 2500);
-    const section80tta = Math.min(getInputValue('section80tta'), 50000);
+    const section80tta = Math.min(getInputValue('section80tta'), ageCaps.section80tta);
     const section80gg = Math.min(getInputValue('section80gg'), 60000);
     const section80dd = Math.min(getInputValue('section80dd'), 125000);
-    const section80ddb = Math.min(getInputValue('section80ddb'), 100000);
+    const section80ddb = Math.min(getInputValue('section80ddb'), ageCaps.section80ddb);
     const section80u = Math.min(getInputValue('section80u'), 125000);
     const section80eea = Math.min(getInputValue('section80eea'), 150000);
     const section80g = getInputValue('section80g') * 0.5;
@@ -284,7 +324,7 @@ function calculateRegimeComparison(grossIncome) {
     const oldTaxableIncome = Math.max(0, grossIncome - oldDeductions);
 
     let oldBaseTax = calculateTaxForRegime(oldTaxableIncome, 'old').tax;
-    if (oldTaxableIncome <= REBATE_LIMIT_OLD) {
+    if (getAgeGroup() !== 'superSenior' && oldTaxableIncome <= REBATE_LIMIT_OLD) {
         oldBaseTax = Math.max(0, oldBaseTax - REBATE_87A_OLD);
     }
     const oldTotalTax = oldBaseTax + (oldBaseTax * HEALTH_EDUCATION_CESS);
@@ -811,7 +851,7 @@ function downloadPDF() {
             </style>
         </head>
         <body>
-            <h1>📊 Income Tax Summary - FY 2024-25</h1>
+            <h1>📊 Income Tax Summary - FY 2025-26</h1>
             <p><strong>Generated on:</strong> ${new Date().toLocaleDateString('en-IN')}</p>
             
             <h2>Income Details</h2>

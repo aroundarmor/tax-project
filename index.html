@@ -37,7 +37,7 @@
             <div class="tabs">
                 <button class="tab active" data-regime="old" onclick="selectRegime('old')">Old Tax Regime (With
                     Deductions)</button>
-                <button class="tab" data-regime="new" onclick="selectRegime('new')">New Tax Regime (FY 2024-25)</button>
+                <button class="tab" data-regime="new" onclick="selectRegime('new')">New Tax Regime (FY 2025-26)</button>
             </div>
             <div class="alert alert-info mt-md">
                 <strong>💡 Selected:</strong> <span id="regime-info">Old Tax Regime - Allows all deductions under
@@ -46,6 +46,31 @@
             <div class="alert alert-success mt-sm">
                 <strong>🎉 Budget 2025-26:</strong> New regime now offers zero tax up to ₹12.75 lakh for salaried
                 employees! Standard deduction increased to ₹75,000.
+            </div>
+        </div>
+
+        <!-- Age Group Selector -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <div class="card-icon">👤</div>
+                <h2 class="card-title">Select Your Age Group</h2>
+            </div>
+            <div class="alert alert-info mt-sm" style="margin-bottom: 1rem;">
+                <strong>⚠️ Important:</strong> Age group affects your basic exemption limit, Section 80TTA/80TTB cap, and Section 80DDB cap under the <strong>Old Regime</strong>.
+            </div>
+            <div class="grid grid-3" style="gap: 1rem;">
+                <label style="display:flex; align-items:center; gap:0.75rem; padding:1rem; background: var(--gray-50); border-radius: var(--radius-md); cursor:pointer; border: 2px solid var(--accent-300);">
+                    <input type="radio" id="ageGroup" name="ageGroup" value="below60" onchange="calculateTax()" checked style="width:1.2rem; height:1.2rem;">
+                    <span><strong>Below 60 years</strong><br><small style="color:var(--gray-500)">Basic exemption: ₹2.5L | 80TTA: ₹10k | 80DDB: ₹40k</small></span>
+                </label>
+                <label style="display:flex; align-items:center; gap:0.75rem; padding:1rem; background: var(--gray-50); border-radius: var(--radius-md); cursor:pointer; border: 2px solid var(--warning-400);">
+                    <input type="radio" name="ageGroup" value="senior" onchange="calculateTax()" style="width:1.2rem; height:1.2rem;">
+                    <span><strong>Senior Citizen (60–79)</strong><br><small style="color:var(--gray-500)">Basic exemption: ₹3L | 80TTB: ₹50k | 80DDB: ₹1L</small></span>
+                </label>
+                <label style="display:flex; align-items:center; gap:0.75rem; padding:1rem; background: var(--gray-50); border-radius: var(--radius-md); cursor:pointer; border: 2px solid var(--success-400);">
+                    <input type="radio" name="ageGroup" value="superSenior" onchange="calculateTax()" style="width:1.2rem; height:1.2rem;">
+                    <span><strong>Super Senior (80+)</strong><br><small style="color:var(--gray-500)">Basic exemption: ₹5L | 80TTB: ₹50k | 80DDB: ₹1L | No rebate 87A</small></span>
+                </label>
             </div>
         </div>
 
@@ -359,7 +384,7 @@
                     <tr>
                         <th>Parameter</th>
                         <th>Old Regime</th>
-                        <th>New Regime (FY 24-25)</th>
+                        <th>New Regime (FY 25-26)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -528,6 +553,19 @@
                 <div class="alert alert-info mt-md">
                     <strong>📋 Note:</strong> With Budget 2025-26 changes, more taxpayers under new regime may use ITR-1
                     for simpler filings.
+                </div>
+
+                <div class="alert alert-warning mt-sm">
+                    <strong>💰 Surcharge Alert (Income &gt; ₹50L):</strong> A surcharge applies on income above ₹50 lakh.
+                    Under the <strong>new regime</strong>, the maximum surcharge is capped at <strong>25%</strong>.
+                    Under the <strong>old regime</strong>, it can go up to <strong>37%</strong> for income above ₹5 crore.
+                    This calculator does not include surcharge — consult a CA if applicable.
+                </div>
+
+                <div class="alert alert-info mt-sm">
+                    <strong>✈️ Budget 2025 — TCS on Foreign Remittances (LRS):</strong> The TCS-free threshold on
+                    overseas remittances under LRS has been increased to <strong>₹10 lakh</strong> (from ₹7 lakh).
+                    TCS is also now <strong>removed</strong> for education loans availed from specified financial institutions.
                 </div>
 
                 <div class="grid grid-2 mt-md">
