@@ -15,6 +15,7 @@ server/.env
 .gemini/
 .vscode/
 .antigravity/
+.env*
 
 # System Files
 .DS_Store
