@@ -6,6 +6,8 @@
   <title>TaxSaver Pricing — Free vs Premium | Indian Tax Calculator</title>
   <meta name="description" content="Simple pricing for TaxSaver. Free tax calculator forever. Premium at ₹999/year includes Form 16 upload, AI insights, and CA-grade reports.">
   <link rel="stylesheet" href="styles.css">
+  <!-- Razorpay Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     .compare-table { width:100%; border-collapse:collapse; }
     .compare-table th { padding: 14px 20px; font-size:0.82rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--gray-400); border-bottom: 1px solid var(--border); text-align:left; }
@@ -27,7 +29,6 @@
 </head>
 <body>
 
-<!-- ── Navbar ─────────────────────────────────────────── -->
 <nav class="navbar">
   <div class="container navbar-inner">
     <a href="index.html" class="navbar-logo gradient-text">💰 TaxSaver</a>
@@ -37,8 +38,13 @@
       <li><a href="premium.html">Premium</a></li>
       <li><a href="pricing.html" class="active">Pricing</a></li>
     </ul>
-    <div class="navbar-cta">
-      <a href="app.html" class="btn btn-outline btn-sm">Free Calculator</a>
+    <div class="navbar-cta" style="gap:10px;">
+      <!-- User avatar (shown when signed in) -->
+      <div id="navAvatar" title="" style="display:none; width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--brand-purple),var(--brand-indigo)); align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; overflow:hidden; cursor:pointer;">        <img src="" style="width:100%; height:100%; object-fit:cover; display:none;" alt="Avatar">
+        <span class="initials">?</span>
+      </div>
+      <span id="navPremiumBadge" class="badge badge-premium" style="display:none;">✨ Premium</span>
+      <a href="login.html" id="navAuthBtn" class="btn btn-outline btn-sm">Sign In</a>
     </div>
   </div>
 </nav>
@@ -98,8 +104,8 @@
           <li><span class="check">✅</span> Priority email support</li>
           <li><span class="check">✅</span> 30-day money-back guarantee</li>
         </ul>
-        <a href="#" onclick="showPaymentModal()" class="btn btn-premium w-full" style="font-size:1rem; padding:14px;">✨ Get Premium — ₹999/yr</a>
-        <p class="text-center text-xs text-muted mt-sm">Instant access · Secure payment · UPI / Cards accepted</p>
+        <a href="#" onclick="handleGetPremium()" class="btn btn-premium w-full" style="font-size:1rem; padding:14px;">✨ Get Premium — ₹999/yr</a>
+        <p class="text-center text-xs text-muted mt-sm">Instant access · UPI, Cards, Net Banking · Secure via Razorpay</p>
       </div>
     </div>
 
@@ -200,31 +206,10 @@
   <div class="container-sm">
     <h2 class="section-title" style="margin-bottom:16px;">Start saving more today</h2>
     <p class="section-subtitle" style="margin-bottom:32px;">₹999/year is less than what most people leave on the table in a single deduction.</p>
-    <a href="#" onclick="showPaymentModal()" class="btn btn-premium btn-lg">✨ Get Premium — ₹999/yr</a>
+    <a href="#" onclick="handleGetPremium()" class="btn btn-premium btn-lg">✨ Get Premium — ₹999/yr</a>
     <p class="text-xs text-muted mt-md">Or <a href="app.html" style="color:var(--brand-purple-light);">use the free calculator →</a></p>
   </div>
 </section>
-
-<!-- ── Payment Modal ───────────────────────────────────── -->
-<div id="paymentModal" style="display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); align-items:center; justify-content:center;">
-  <div style="background:#16161f; border:1px solid var(--border); border-radius:var(--radius-xl); padding:40px; max-width:440px; width:90%; text-align:center; position:relative;">
-    <button onclick="closeModal()" style="position:absolute; top:16px; right:20px; background:none; border:none; color:var(--gray-400); font-size:1.5rem; cursor:pointer;">×</button>
-    <div style="font-size:3rem; margin-bottom:16px;">💳</div>
-    <h2 style="font-weight:800; margin-bottom:8px;">Get Premium Access</h2>
-    <p class="text-sm text-muted" style="margin-bottom:24px;">One-time annual payment. Cancel anytime. 30-day refund guarantee.</p>
-
-    <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; margin-bottom:24px; text-align:left;">
-      <div class="d-flex justify-between align-center mb-sm"><span class="text-sm">TaxSaver Premium (1 year)</span><span class="fw-bold">₹999</span></div>
-      <div class="d-flex justify-between align-center text-sm text-muted"><span>18% GST</span><span>₹180</span></div>
-      <hr style="border:none; border-top:1px solid var(--border); margin:12px 0;">
-      <div class="d-flex justify-between align-center fw-bold"><span>Total</span><span class="gradient-text-gold" style="font-size:1.2rem;">₹1,179</span></div>
-    </div>
-
-    <button class="btn btn-premium w-full" style="margin-bottom:12px; font-size:1rem;">Pay with UPI / Cards</button>
-    <p class="text-xs text-muted">🔒 Powered by Razorpay · PCI-DSS compliant</p>
-    <p class="text-xs text-muted mt-sm">By purchasing, you agree to our <a href="#" style="color:var(--brand-purple-light);">Terms of Service</a> and <a href="#" style="color:var(--brand-purple-light);">Refund Policy</a>.</p>
-  </div>
-</div>
 
 <!-- ── Footer ──────────────────────────────────────────── -->
 <footer class="footer" style="margin-top:0;">
@@ -240,8 +225,122 @@
   </div>
 </footer>
 
-<script>
-function toggleFaq(el) {
+<!-- ── Success Modal ──────────────────────────────────── -->
+<div id="successModal" style="display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px); align-items:center; justify-content:center;">
+  <div style="background:#16161f; border:1px solid rgba(16,185,129,0.4); border-radius:var(--radius-xl); padding:48px 40px; max-width:420px; width:90%; text-align:center;">
+    <div style="font-size:3.5rem; margin-bottom:16px;">🎉</div>
+    <h2 style="font-weight:800; margin-bottom:10px; color:var(--brand-green-light);">Welcome to Premium!</h2>
+    <p class="text-sm text-muted" style="margin-bottom:24px;">Your payment is confirmed. You now have full access to all Premium features.</p>
+    <a href="premium.html" class="btn btn-green w-full">Go to Premium Dashboard →</a>
+  </div>
+</div>
+
+<script type="module">
+import { initAuthState, getIdToken } from './auth.js';
+
+const API_BASE = 'http://localhost:3001';
+let currentUser = null;
+let currentIsPremium = false;
+
+// Init auth state — updates navbar
+initAuthState({
+  onSignedIn: (user, isPremium) => {
+    currentUser = user;
+    currentIsPremium = isPremium;
+  },
+  onSignedOut: () => {
+    currentUser = null;
+    currentIsPremium = false;
+  }
+});
+
+// Handle "Get Premium" button
+window.handleGetPremium = async function() {
+  // Require sign-in first
+  if (!currentUser) {
+    window.location.href = 'login.html?returnTo=pricing.html';
+    return;
+  }
+
+  // Already premium
+  if (currentIsPremium) {
+    window.location.href = 'premium.html';
+    return;
+  }
+
+  // Disable button and show loading
+  const btn = document.querySelector('[onclick="handleGetPremium()"]');
+  if (btn) { btn.textContent = '⏳ Creating order...'; btn.style.pointerEvents = 'none'; }
+
+  try {
+    // 1. Get Firebase ID token
+    const token = await getIdToken();
+
+    // 2. Create Razorpay order via our backend
+    const orderRes = await fetch(`${API_BASE}/api/payment/create-order`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!orderRes.ok) throw new Error('Failed to create order. Please try again.');
+    const order = await orderRes.json();
+
+    // 3. Open Razorpay Checkout
+    const rzp = new Razorpay({
+      key: order.keyId,
+      amount: order.amount,
+      currency: order.currency,
+      order_id: order.orderId,
+      name: 'TaxSaver Premium',
+      description: 'Annual Premium Subscription',
+      image: '💰',
+      prefill: {
+        name: currentUser.displayName || '',
+        email: currentUser.email || '',
+      },
+      theme: { color: '#7c3aed' },
+      handler: async function(response) {
+        // 4. Verify payment on backend
+        try {
+          const freshToken = await getIdToken();
+          const verifyRes = await fetch(`${API_BASE}/api/payment/verify`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${freshToken}`
+            },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            })
+          });
+          if (verifyRes.ok) {
+            document.getElementById('successModal').style.display = 'flex';
+          } else {
+            alert('Payment received but verification failed. Contact support@taxsaver.in with your payment ID: ' + response.razorpay_payment_id);
+          }
+        } catch(e) {
+          alert('Payment done. Contact support if access is not activated within 5 minutes.');
+        }
+      },
+      modal: {
+        ondismiss: function() {
+          if (btn) { btn.textContent = '✨ Get Premium — ₹999/yr'; btn.style.pointerEvents = ''; }
+        }
+      }
+    });
+    rzp.open();
+  } catch(err) {
+    alert(err.message || 'Something went wrong. Please try again.');
+    if (btn) { btn.textContent = '✨ Get Premium — ₹999/yr'; btn.style.pointerEvents = ''; }
+  }
+};
+
+// FAQ toggle
+window.toggleFaq = function(el) {
   const item = el.closest('.faq-item');
   const isOpen = item.classList.contains('open');
   document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
