@@ -1,0 +1,18 @@
+# Dependency directories
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# AI Agent / IDE Directories
+.claude/
+.codex/
+.opencode/
+.gemini/
+.vscode/
+.antigravity/
+
+# System Files
+.DS_Store
+Thumbs.db
+PRD.md

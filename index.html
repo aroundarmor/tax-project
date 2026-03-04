@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Calculate your income tax, optimize deductions, and get ITR filing guidance for India. Updated for Budget 2025-26 with zero tax up to ₹12.75 lakh!">
+    <title>TaxSaver - Income Tax Calculator & ITR Filing Assistant | India | Budget 2025-26</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>💰 TaxSaver - Income Tax Calculator</h1>
+            <p class="header-subtitle">Calculate your tax, optimize deductions & file ITR with confidence | FY 2025-26
+                (AY 2026-27) | Budget 2025 Updated!</p>
+        </header>
+
+        <!-- Tax Regime Selector -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <div class="card-icon">⚖️</div>
+                <h2 class="card-title">Choose Your Tax Regime</h2>
+            </div>
+            <div class="tabs">
+                <button class="tab active" data-regime="old" onclick="selectRegime('old')">Old Tax Regime (With
+                    Deductions)</button>
+                <button class="tab" data-regime="new" onclick="selectRegime('new')">New Tax Regime (FY 2024-25)</button>
+            </div>
+            <div class="alert alert-info mt-md">
+                <strong>💡 Selected:</strong> <span id="regime-info">Old Tax Regime - Allows all deductions under
+                    sections 80C, 80D, etc.</span>
+            </div>
+            <div class="alert alert-success mt-sm">
+                <strong>🎉 Budget 2025-26:</strong> New regime now offers zero tax up to ₹12.75 lakh for salaried
+                employees! Standard deduction increased to ₹75,000.
+            </div>
+        </div>
+
+        <!-- Income Input Section -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <div class="card-icon">💼</div>
+                <h2 class="card-title">Enter Your Income Details</h2>
+            </div>
+
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="salary">Gross Salary (Annual)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="salary" class="form-input input-with-prefix" placeholder="0" min="0"
+                            oninput="calculateTax()">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="houseProperty">Income from House Property</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="houseProperty" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="capitalGains">Capital Gains (LTCG + STCG)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="capitalGains" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="otherIncome">Other Income (Interest, etc.)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="otherIncome" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-box mt-md">
+                <div class="result-label">Total Gross Income</div>
+                <div class="result-value" id="totalIncome">₹ 0</div>
+            </div>
+        </div>
+
+        <!-- Deductions Section (Old Regime Only) -->
+        <div class="card fade-in" id="deductions-section">
+            <div class="card-header">
+                <div class="card-icon">📊</div>
+                <h2 class="card-title">Deductions & Exemptions</h2>
+            </div>
+
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="section80c">Section 80C (PPF, ELSS, LIC, EPF)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80c" class="form-input input-with-prefix" placeholder="0"
+                            max="150000" oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">Maximum: ₹1,50,000</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="section80d">Section 80D (Health Insurance)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80d" class="form-input input-with-prefix" placeholder="0"
+                            max="100000" oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">Max: ₹25k (self) + ₹25k (parents) or ₹50k (senior
+                        parents)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="section80ccd1b">Section 80CCD(1B) (NPS)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80ccd1b" class="form-input input-with-prefix" placeholder="0"
+                            max="50000" oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">Maximum: ₹50,000 (Additional over 80C)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="npsVatsalya">🆕 NPS Vatsalya (Children) - Budget 2025</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="npsVatsalya" class="form-input input-with-prefix" placeholder="0"
+                            max="50000" oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600); font-weight: 500;">✨ NEW! Maximum: ₹50,000 (For children's NPS
+                        contributions)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="homeLoanInterest">Home Loan Interest (Section 24)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="homeLoanInterest" class="form-input input-with-prefix" placeholder="0"
+                            max="200000" oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">Maximum: ₹2,00,000</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="hra">HRA Exemption</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="hra" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="lta">LTA (Leave Travel Allowance)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="lta" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                </div>
+
+                <!-- NEW DEDUCTIONS - Education & Professional -->
+                <div class="form-group">
+                    <label class="form-label" for="section80e">Section 80E (Education Loan Interest) 🎓</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80e" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--success-600); font-weight: 500;">✨ NO LIMIT! Interest for 8 years</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="professionalTax">Professional Tax (Section 16(iii))</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="professionalTax" class="form-input input-with-prefix" placeholder="0"
+                            max="2500" oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">Maximum: ₹2,500/year</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="section80tta">Section 80TTA/TTB (Savings Interest) 💰</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80tta" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">Max: ₹10k (<60 yrs) or ₹50k (senior citizens)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="section80gg">Section 80GG (Rent without HRA) 🏠</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80gg" class="form-input input-with-prefix" placeholder="0"
+                            max="60000" oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">Max: ₹5,000/month (if no HRA received)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="section80dd">Section 80DD (Disability - Dependent)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80dd" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">₹75k (40-80%) or ₹1.25L (severe ≥80%)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="section80ddb">Section 80DDB (Critical Illness)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80ddb" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">Max: ₹40k (<60 yrs) or ₹1L (≥60 yrs)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="section80u">Section 80U (Self Disability)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80u" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">₹75k (40-80%) or ₹1.25L (severe ≥80%)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="section80eea">Section 80EEA (Affordable Housing Interest)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80eea" class="form-input input-with-prefix" placeholder="0"
+                            max="150000" oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">Max: ₹1.5L (additional to Section 24)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="section80g">Section 80G (Charitable Donations)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80g" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">50% or 100% of donation (depends on institution)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="section80gga">Section 80GGA (Scientific Research)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80gga" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">100% of donation (not for business income)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="section80ggc">Section 80GGC (Political Donations)</label>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="section80ggc" class="form-input input-with-prefix" placeholder="0"
+                            oninput="calculateTax()">
+                    </div>
+                    <small style="color: var(--gray-600);">100% of donation (non-cash only)</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tax Calculation Results -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <div class="card-icon">🧮</div>
+                <h2 class="card-title">Tax Calculation Summary</h2>
+            </div>
+
+            <div class="grid grid-2">
+                <div class="result-box">
+                    <div class="result-label">Taxable Income</div>
+                    <div class="result-value" id="taxableIncome">₹ 0</div>
+                </div>
+
+                <div class="result-box">
+                    <div class="result-label">Total Tax Payable</div>
+                    <div class="result-value large" id="totalTax">₹ 0</div>
+                </div>
+            </div>
+
+            <!-- Tax Breakdown -->
+            <div class="mt-md">
+                <h3 class="mb-sm">Tax Slab Breakdown</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Income Slab</th>
+                            <th>Tax Rate</th>
+                            <th>Tax Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taxBreakdown">
+                        <tr>
+                            <td colspan="3" class="text-center" style="color: var(--gray-500);">Enter income to see tax
+                                breakdown</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Additional Charges -->
+            <div class="grid grid-3 mt-md">
+                <div class="result-box">
+                    <div class="result-label">Income Tax</div>
+                    <div class="result-value" id="baseTax" style="font-size: 1.5rem;">₹ 0</div>
+                </div>
+                <div class="result-box">
+                    <div class="result-label">Health & Education Cess (4%)</div>
+                    <div class="result-value" id="cess" style="font-size: 1.5rem;">₹ 0</div>
+                </div>
+                <div class="result-box">
+                    <div class="result-label">Take Home (Monthly)</div>
+                    <div class="result-value text-success" id="takeHome" style="font-size: 1.5rem;">₹ 0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Regime Comparison -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <div class="card-icon">⚡</div>
+                <h2 class="card-title">Old vs New Regime Comparison</h2>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Old Regime</th>
+                        <th>New Regime (FY 24-25)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Taxable Income</strong></td>
+                        <td id="oldTaxableIncome">₹ 0</td>
+                        <td id="newTaxableIncome">₹ 0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Tax</strong></td>
+                        <td id="oldTotalTax">₹ 0</td>
+                        <td id="newTotalTax">₹ 0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Take Home (Annual)</strong></td>
+                        <td id="oldTakeHome">₹ 0</td>
+                        <td id="newTakeHome">₹ 0</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="text-center" style="background: var(--card-gradient);">
+                            <strong id="recommendation" style="color: var(--accent-700); font-size: 1.125rem;">💡
+                                Recommendation will appear here</strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tax Optimizer Section -->
+        <div class="card fade-in"
+            style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%); border: 2px solid var(--accent-500);">
+            <div class="card-header">
+                <div class="card-icon">🎯</div>
+                <h2 class="card-title">Tax Optimizer - Minimize Your Tax!</h2>
+            </div>
+
+            <div class="alert alert-success">
+                <strong>💡 Smart Tax Optimization:</strong> Get personalized strategies to achieve zero or minimal tax
+                for your salary range. See exactly which investments to make!
+            </div>
+
+            <!-- Quick Scenario Selector -->
+            <div class="mt-md">
+                <h3 class="mb-sm">Quick Optimize For Your Salary:</h3>
+                <div class="grid grid-2" style="gap: 1rem;">
+                    <button class="btn btn-primary" onclick="optimizeForSalary(1275000)"
+                        style="font-size: 1rem; padding: 1rem;">
+                        🎉 ₹12.75 Lakh<br>
+                        <small style="font-weight: normal;">Zero Tax Possible!</small>
+                    </button>
+                    <button class="btn btn-primary" onclick="optimizeForSalary(1500000)"
+                        style="font-size: 1rem; padding: 1rem;">
+                        💰 ₹15 Lakh<br>
+                        <small style="font-weight: normal;">Save ₹1.80L!</small>
+                    </button>
+                    <button class="btn btn-primary" onclick="optimizeForSalary(1750000)"
+                        style="font-size: 1rem; padding: 1rem;">
+                        📊 ₹17.5 Lakh<br>
+                        <small style="font-weight: normal;">Save ₹2.47L!</small>
+                    </button>
+                    <button class="btn btn-primary" onclick="optimizeForSalary(2000000)"
+                        style="font-size: 1rem; padding: 1rem;">
+                        🚀 ₹20 Lakh<br>
+                        <small style="font-weight: normal;">Save ₹3.04L!</small>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Optimization Results -->
+            <div id="optimizer-results" class="hidden">
+                <!-- Results will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Investment Suggestions -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <div class="card-icon">💡</div>
+                <h2 class="card-title">Smart Investment Suggestions to Save Tax</h2>
+            </div>
+
+            <div id="suggestions-container">
+                <div class="alert alert-info">
+                    <strong>ℹ️ Note:</strong> Enter your income and deductions to get personalized investment
+                    suggestions for maximum tax savings.
+                </div>
+            </div>
+
+            <div class="mt-md">
+                <h3 class="mb-sm">Tax Saving Investment Options</h3>
+                <div class="grid grid-2">
+                    <div class="suggestion-item">
+                        <div class="suggestion-title">📈 ELSS Mutual Funds (80C)</div>
+                        <div class="suggestion-desc">Equity Linked Saving Scheme with 3-year lock-in period. Potential
+                            for higher returns with tax benefits.</div>
+                        <div class="suggestion-amount">Save up to ₹46,800 in tax</div>
+                    </div>
+
+                    <div class="suggestion-item">
+                        <div class="suggestion-title">🏦 Public Provident Fund (80C)</div>
+                        <div class="suggestion-desc">Government-backed safe investment with 15-year maturity. Tax-free
+                            returns at ~7-8% p.a.</div>
+                        <div class="suggestion-amount">Save up to ₹46,800 in tax</div>
+                    </div>
+
+                    <div class="suggestion-item">
+                        <div class="suggestion-title">🏥 Health Insurance (80D)</div>
+                        <div class="suggestion-desc">Medical insurance for self and family. Additional deduction for
+                            parents' coverage.</div>
+                        <div class="suggestion-amount">Save up to ₹7,800 in tax</div>
+                    </div>
+
+                    <div class="suggestion-item">
+                        <div class="suggestion-title">👴 National Pension Scheme (80CCD1B)</div>
+                        <div class="suggestion-desc">Additional ₹50k deduction over 80C. Invest for retirement with
+                            market-linked returns.</div>
+                        <div class="suggestion-amount">Save up to ₹15,600 in tax</div>
+                    </div>
+
+                    <div class="suggestion-item"
+                        style="border-left-color: var(--success-500); background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);">
+                        <div class="suggestion-title">🆕 NPS Vatsalya - NEW in Budget 2025!</div>
+                        <div class="suggestion-desc">Contribute to NPS for your children. Additional ₹50k deduction -
+                            over and above 80C limit!</div>
+                        <div class="suggestion-amount">Save up to ₹15,600 in tax 🎉</div>
+                    </div>
+
+                    <div class="suggestion-item">
+                        <div class="suggestion-title">🏠 Home Loan (Section 24)</div>
+                        <div class="suggestion-desc">Interest on home loan up to ₹2 lakh is deductible. Principal
+                            repayment under 80C.</div>
+                        <div class="suggestion-amount">Save up to ₹62,400 in tax</div>
+                    </div>
+
+                    <div class="suggestion-item">
+                        <div class="suggestion-title">📚 Education Loan Interest (80E)</div>
+                        <div class="suggestion-desc">Full interest on education loan is deductible for 8 years. No upper
+                            limit.</div>
+                        <div class="suggestion-amount">No upper limit on deduction</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ITR Filing Guide -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <div class="card-icon">📋</div>
+                <h2 class="card-title">ITR Filing Guide for FY 2024-25</h2>
+            </div>
+
+            <div class="alert alert-warning">
+                <strong>⏰ Important Deadline:</strong> File your ITR by <strong>July 31, 2026</strong> to avoid
+                penalties and late fees.
+            </div>
+
+            <div class="mt-md">
+                <h3 class="mb-sm">Which ITR Form Should You Use?</h3>
+                <div id="itr-form-suggestion" class="result-box">
+                    <div class="result-label">Recommended ITR Form</div>
+                    <div class="result-value" id="itrForm" style="font-size: 1.75rem;">ITR-1 (Sahaj)</div>
+                    <p id="itrFormDesc" class="mt-sm" style="color: var(--gray-600);">For individuals with salary
+                        income, one house property, and other income up to ₹50 lakh.</p>
+                </div>
+
+                <div class="alert alert-info mt-md">
+                    <strong>📋 Note:</strong> With Budget 2025-26 changes, more taxpayers under new regime may use ITR-1
+                    for simpler filings.
+                </div>
+
+                <div class="grid grid-2 mt-md">
+                    <div class="suggestion-item">
+                        <div class="suggestion-title">ITR-1 (Sahaj)</div>
+                        <div class="suggestion-desc">For salary, one house property, other income (excluding lottery).
+                            Total income up to ₹50 lakh.</div>
+                    </div>
+
+                    <div class="suggestion-item">
+                        <div class="suggestion-title">ITR-2</div>
+                        <div class="suggestion-desc">For individuals/HUFs not having business income. Includes capital
+                            gains, multiple properties.</div>
+                    </div>
+
+                    <div class="suggestion-item">
+                        <div class="suggestion-title">ITR-3</div>
+                        <div class="suggestion-desc">For individuals/HUFs having business or professional income.</div>
+                    </div>
+
+                    <div class="suggestion-item">
+                        <div class="suggestion-title">ITR-4 (Sugam)</div>
+                        <div class="suggestion-desc">For presumptive income from business/profession under sections
+                            44AD, 44ADA, 44AE.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-lg">
+                <h3 class="mb-sm">Step-by-Step Filing Process</h3>
+                <div class="suggestion-item">
+                    <strong>1. Gather Documents:</strong> Form 16, Form 26AS, bank statements, investment proofs, TDS
+                    certificates
+                </div>
+                <div class="suggestion-item">
+                    <strong>2. Register/Login:</strong> Visit <a href="https://www.incometax.gov.in" target="_blank"
+                        style="color: var(--accent-600);">incometax.gov.in</a> and login with PAN
+                </div>
+                <div class="suggestion-item">
+                    <strong>3. Download Pre-filled Data:</strong> Check Form 26AS and AIS for pre-filled information
+                </div>
+                <div class="suggestion-item">
+                    <strong>4. Fill ITR Form:</strong> Enter income, deductions, and tax details accurately
+                </div>
+                <div class="suggestion-item">
+                    <strong>5. Verify Tax Calculation:</strong> Ensure tax computed matches your calculations
+                </div>
+                <div class="suggestion-item">
+                    <strong>6. E-Verify:</strong> Verify using Aadhaar OTP, net banking, or send signed ITR-V within 120
+                    days
+                </div>
+            </div>
+
+            <div class="mt-md">
+                <button class="btn btn-primary" onclick="window.open('https://www.incometax.gov.in', '_blank')">
+                    🚀 File ITR on Income Tax Portal
+                </button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card fade-in text-center">
+            <div class="grid grid-2">
+                <button class="btn btn-success" onclick="downloadPDF()">
+                    📄 Download Tax Summary (PDF)
+                </button>
+                <button class="btn btn-secondary" onclick="resetCalculator()">
+                    🔄 Reset Calculator
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center mt-lg" style="color: rgba(255, 255, 255, 0.8); padding-bottom: var(--spacing-lg);">
+            <p style="font-size: 0.875rem;">
+                <strong>Disclaimer:</strong> This calculator is for educational purposes only. Please consult a
+                chartered accountant or tax advisor for accurate tax planning and filing.
+            </p>
+            <p style="font-size: 0.75rem; margin-top: var(--spacing-sm);">
+                Tax rates as per FY 2025-26 (AY 2026-27) | Updated with Budget 2025 | Made with ❤️ for Indian Taxpayers
+            </p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+</body>
+
+</html>
