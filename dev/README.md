@@ -8,12 +8,13 @@
 dev/
 ├── website/       # Copy of new-website/ with MOCK firebase.js + auth.js
 │   ├── firebase.js   ← MOCKED (no Firebase SDK)
-│   ├── auth.js       ← MOCKED (uses hardcoded test token)
-│   ├── login.html    ← Modified — instant sign-in, no Google popup
-│   ├── test.html     ← 🆕 E2E test dashboard (run this first!)
+│   ├── auth.js       ← MOCKED (uses hardcoded test tokens based on role)
+│   ├── login.html    ← 🆕 3-card instant sign-in (Free, Premium, Admin)
+│   ├── test.html     ← E2E test dashboard
+│   ├── dev-banner.js ← Injects admin view banner
 │   └── ... (all other pages copied from new-website/)
 └── server/
-    ├── mock_server.go   ← Self-contained Go mock server
+    ├── mock_server.go   ← Self-contained Go mock server that recognizes test tokens
     └── go.mod
 ```
 
@@ -29,42 +30,40 @@ go run mock_server.go
 
 ### Terminal 2 — Open the frontend
 
-Open `dev/website/test.html` with VS Code Live Server (right-click → Open with Live Server).
+Start an HTTP server in the `dev/website` folder.
+For example, using Node.js:
 
-Or navigate directly to: **http://localhost:5500/dev/website/test.html**
+```powershell
+npx http-server ./dev/website -p 5500 --cors -c-1
+```
 
-## Test Flow
+Navigate to: **http://localhost:5500/login.html**
 
-1. Open `test.html` — E2E Test Dashboard
-2. Click **"Run Full E2E Test"** — it runs 6 automated steps:
-   - Sign in as test user (instant, no popup)
-   - Ping mock server health
-   - Create a mock payment order
-   - Verify payment (always succeeds in mock)
-   - Confirm premium is activated
-   - Reset back to free plan
+## Test Users
 
-## Test User
+The mock environment provides three instant-login personas to test different app states:
 
-| Field      | Value                    |
-| ---------- | ------------------------ |
-| UID        | `test-user-001`          |
-| Email      | `test@taxsaver.dev`      |
-| Auth Token | `dev-test-token-12345`   |
-| Session    | Stored in `localStorage` |
+| Role                | Email                  | Token                     | Features                                                              |
+| ------------------- | ---------------------- | ------------------------- | --------------------------------------------------------------------- |
+| 👤 **Free User**    | `test@taxsaver.dev`    | `dev-test-token-12345`    | Standard calculator, locked premium features.                         |
+| ✨ **Premium User** | `premium@taxsaver.dev` | `dev-premium-token-77777` | Unlocked premium AI reports, bypassed paywalls.                       |
+| ⚙️ **Admin User**   | `admin@taxsaver.dev`   | `dev-admin-token-99999`   | Access to `admin.html`, global 'ADMIN VIEW' banner, premium features. |
+
+Select any card on the `login.html` page to instantly authenticate as that user. The session is stored in `localStorage`.
 
 ## Mock API Endpoints
 
-| Method | Path                        | Notes                              |
-| ------ | --------------------------- | ---------------------------------- |
-| `GET`  | `/health`                   | Always returns `ok`                |
-| `GET`  | `/api/user/status`          | Returns current premium state      |
-| `POST` | `/api/payment/create-order` | Returns a fake order ID            |
-| `POST` | `/api/payment/verify`       | Always succeeds → marks premium    |
-| `POST` | `/api/payment/webhook`      | No-op in dev                       |
-| `GET`  | `/api/dev/reset`            | **Dev only** — resets to Free plan |
+| Method | Path                        | Notes                                                  |
+| ------ | --------------------------- | ------------------------------------------------------ |
+| `GET`  | `/health`                   | Always returns `ok`                                    |
+| `GET`  | `/api/user/status`          | Returns current premium state for the token            |
+| `GET`  | `/api/admin/users`          | Admin only: Lists all mock users and their status      |
+| `POST` | `/api/admin/grant-premium`  | Admin only: Grants 1-year premium to a user ID         |
+| `POST` | `/api/payment/create-order` | Returns a fake Razorpay order ID                       |
+| `POST` | `/api/payment/verify`       | Always succeeds → marks the requesting user as premium |
+| `GET`  | `/api/dev/reset`            | Resets the specified user back to Free plan            |
 
-All protected endpoints require: `Authorization: Bearer dev-test-token-12345`
+All protected endpoints require checking the token via `Authorization: Bearer <token>`.
 
 ## Dev vs Production
 
@@ -72,6 +71,6 @@ All protected endpoints require: `Authorization: Bearer dev-test-token-12345`
 | ------------- | ----------------------------- | ---------------------------- |
 | Firebase      | Mocked (localStorage)         | Real Firebase project        |
 | Razorpay      | Mocked                        | Real Razorpay SDK            |
-| Auth token    | `dev-test-token-12345`        | Real Firebase ID token       |
+| Auth token    | Specific test tokens          | Real Firebase ID token       |
 | Premium state | In-memory (resets on restart) | Firestore                    |
 | Server        | `mock_server.go` (no deps)    | `server/main.go` (Go + deps) |
